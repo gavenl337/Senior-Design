@@ -66,7 +66,15 @@ static void MX_USART3_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint32_t adc[6], buffer[6], sensor1, sensor2, sensor3, pot1in, pot2in, pot3in;
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+	for (int i = 0; i<6; i++)
+		{
+			adc[i] = buffer[i];
+		}
+}
 /* USER CODE END 0 */
 
 /**
@@ -103,7 +111,10 @@ int main(void)
   MX_SPI2_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  //DMA stores ADC values in memory to be called back when needed.
+  //buffer holds the values until conversions are complete,
+  //at which point the adc[] array holds the referenced values.
+  HAL_ADC_Start_DMA (&hadc1, buffer, 6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -113,6 +124,38 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
+	  HAL_Delay(500);
+	  //code for using DMA to scan ADC values
+
+	  //code for reading from all ADC connections in order.
+	  //Should be fast enough for our purposes.
+	  //PollForConversion goes through each ADC to report changes.
+	  /*HAL_ADC_Start (&hadc1); //start the ADC
+
+	  	  HAL_ADC_PollForConversion (&hadc1, 100);
+	  	  sensor1 = HAL_ADC_GetValue (&hadc1);
+
+	  	  HAL_ADC_PollForConversion (&hadc1, 100);
+	  	  sensor2 = HAL_ADC_GetValue (&hadc1);
+
+	  	  HAL_ADC_PollForConversion (&hadc1, 100);
+	  	  sensor3 = HAL_ADC_GetValue (&hadc1);
+
+	  	  HAL_ADC_PollForConversion (&hadc1, 100);
+	  	  pot1in = HAL_ADC_GetValue (&hadc1);
+
+	  	  HAL_ADC_PollForConversion (&hadc1, 100);
+	  	  pot2in = HAL_ADC_GetValue (&hadc1);
+
+	  	  HAL_ADC_PollForConversion (&hadc1, 100);
+	  	  pot3in = HAL_ADC_GetValue (&hadc1);
+
+	  HAL_ADC_Stop (&hadc1);
+
+	  HAL_Delay (100);
+	  */
   }
   /* USER CODE END 3 */
 }
@@ -203,7 +246,7 @@ static void MX_ADC1_Init(void)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.Resolution = ADC_RESOLUTION_10B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
@@ -213,7 +256,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -231,7 +274,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_247CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
@@ -430,7 +473,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|GPIO_PIN_2, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, R_LED_Pin|G_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -445,17 +488,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB1 PB2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
+  /*Configure GPIO pins : R_LED_Pin G_LED_Pin */
+  GPIO_InitStruct.Pin = R_LED_Pin|G_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA8 PA9 PA10 PA11
-                           PA12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
-                          |GPIO_PIN_12;
+  /*Configure GPIO pins : Dip1_Pin Dip2_Pin Dip3_Pin Dip4_Pin
+                           Dip5_Pin */
+  GPIO_InitStruct.Pin = Dip1_Pin|Dip2_Pin|Dip3_Pin|Dip4_Pin
+                          |Dip5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
