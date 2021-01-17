@@ -58,6 +58,38 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define Sensor1_Pin GPIO_PIN_0
+#define Sensor1_GPIO_Port GPIOC
+#define Sensor2_Pin GPIO_PIN_1
+#define Sensor2_GPIO_Port GPIOC
+#define Sensor3_Pin GPIO_PIN_2
+#define Sensor3_GPIO_Port GPIOC
+#define SIM_TX_Pin GPIO_PIN_2
+#define SIM_TX_GPIO_Port GPIOA
+#define SIM_RX_Pin GPIO_PIN_3
+#define SIM_RX_GPIO_Port GPIOA
+#define Pot1_Pin GPIO_PIN_6
+#define Pot1_GPIO_Port GPIOA
+#define Pot2_Pin GPIO_PIN_7
+#define Pot2_GPIO_Port GPIOA
+#define Pot3_Pin GPIO_PIN_4
+#define Pot3_GPIO_Port GPIOC
+#define Button_Pin GPIO_PIN_0
+#define Button_GPIO_Port GPIOB
+#define R_LED_Pin GPIO_PIN_1
+#define R_LED_GPIO_Port GPIOB
+#define G_LED_Pin GPIO_PIN_2
+#define G_LED_GPIO_Port GPIOB
+#define Dip5_Pin GPIO_PIN_8
+#define Dip5_GPIO_Port GPIOA
+#define Dip4_Pin GPIO_PIN_9
+#define Dip4_GPIO_Port GPIOA
+#define Dip3_Pin GPIO_PIN_10
+#define Dip3_GPIO_Port GPIOA
+#define Dip2_Pin GPIO_PIN_11
+#define Dip2_GPIO_Port GPIOA
+#define Dip1_Pin GPIO_PIN_12
+#define Dip1_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
