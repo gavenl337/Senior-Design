@@ -66,8 +66,8 @@ void Error_Handler(void);
 #define Sensor2_GPIO_Port GPIOC
 #define Sensor3_Pin GPIO_PIN_2
 #define Sensor3_GPIO_Port GPIOC
-#define PotMOSI_Pin GPIO_PIN_3
-#define PotMOSI_GPIO_Port GPIOC
+#define Pot_MOSI_Pin GPIO_PIN_3
+#define Pot_MOSI_GPIO_Port GPIOC
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
@@ -86,8 +86,14 @@ void Error_Handler(void);
 #define R_LED_GPIO_Port GPIOB
 #define G_LED_Pin GPIO_PIN_2
 #define G_LED_GPIO_Port GPIOB
-#define PotCLK_Pin GPIO_PIN_10
-#define PotCLK_GPIO_Port GPIOB
+#define Pot_CLK_Pin GPIO_PIN_10
+#define Pot_CLK_GPIO_Port GPIOB
+#define Pot1_CS_Pin GPIO_PIN_12
+#define Pot1_CS_GPIO_Port GPIOB
+#define Pot2_CS_Pin GPIO_PIN_13
+#define Pot2_CS_GPIO_Port GPIOB
+#define Pot3_CS_Pin GPIO_PIN_14
+#define Pot3_CS_GPIO_Port GPIOB
 #define Dip1_Pin GPIO_PIN_8
 #define Dip1_GPIO_Port GPIOA
 #define Dip2_Pin GPIO_PIN_9
