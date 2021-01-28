@@ -112,6 +112,10 @@ void Error_Handler(void);
 #define SimTX_GPIO_Port GPIOC
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define DigiPotSCL_Pin GPIO_PIN_6
+#define DigiPotSCL_GPIO_Port GPIOB
+#define DigiPotSDA_Pin GPIO_PIN_7
+#define DigiPotSDA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
