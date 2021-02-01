@@ -80,6 +80,8 @@ void Error_Handler(void);
 #define R_LED_GPIO_Port GPIOB
 #define G_LED_Pin GPIO_PIN_2
 #define G_LED_GPIO_Port GPIOB
+#define Heater_Pin GPIO_PIN_10
+#define Heater_GPIO_Port GPIOB
 #define Dip5_Pin GPIO_PIN_8
 #define Dip5_GPIO_Port GPIOA
 #define Dip4_Pin GPIO_PIN_9

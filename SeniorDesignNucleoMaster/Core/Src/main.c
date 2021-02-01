@@ -25,7 +25,6 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <main.h>
 
 /* USER CODE END Includes */
 
@@ -139,36 +138,7 @@ int main(void)
 
 	  HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
 	  HAL_Delay(500);
-	  //Using DMA to scan ADC values seems to work just as well
-	  //as polling. I think we can get rid of the code below.
-
-	  //code for reading from all ADC connections in order.
-	  //Should be fast enough for our purposes.
-	  //PollForConversion goes through each ADC to report changes.
-	  /*HAL_ADC_Start (&hadc1); //start the ADC
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  sensor1 = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  sensor2 = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  sensor3 = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  pot1in = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  pot2in = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  pot3in = HAL_ADC_GetValue (&hadc1);
-
-	  HAL_ADC_Stop (&hadc1);
-
-	  HAL_Delay (100);
-	  */
+	  //Using DMA to scan ADC values. Array adc[] holds the values from the 6 ADC inputs. sensor1=adc[0] sensor2=adc[1] etc.
   }
   /* USER CODE END 3 */
 }
