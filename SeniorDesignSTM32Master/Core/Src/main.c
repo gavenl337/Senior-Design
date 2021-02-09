@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h> // I ADDED THINGS HERE !!!!!!!!
 
 /* USER CODE END Includes */
 
@@ -69,6 +70,7 @@ static void MX_ADC1_Init(void);
 /* USER CODE BEGIN 0 */
 uint32_t adc[6], buffer[6], sensor1, sensor2, sensor3, pot1in, pot2in, pot3in;
 
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 	for (int i = 0; i<6; i++)
@@ -95,12 +97,42 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
+  unsigned long lastMillis = 0; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor1ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor2ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor3ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor1ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor2ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor3ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+
+  string valuePayload; // I ADDED THINGS HERE !!!!!!!!
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+
+  //LowPower Sleep mode button-interrupt connection
+   LowPower.attachInterruptWakeup(BUTTON_PIN, wakeUp, CHANGE); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+
+   //GSM Setup
+   Serial.begin(115200); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+   //while (!Serial);
+ }
+
+   // Optional, set the client id used for MQTT,
+   // each device that is connected to the broker
+   // must have a unique client id. The MQTTClient will generate
+   // a client id for you based on the millis() value if not set
+   //
+   mqttClient.setId("ISLGSM001"); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+
+   // Set the message callback, this function is
+   // called when the MQTTClient receives a message
+   mqttClient.onMessage(onMessageReceived); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+ }
 
   /* USER CODE END SysInit */
 
@@ -124,6 +156,32 @@ int main(void)
 	strcpy((char*)buf, "Hello!\r\n");
 	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
 	HAL_Delay(500);
+
+	bool abortLogging = false; // I ADDED THINGS HERE !!!!!!!!
+	float airreading_S1, airreading_S2, airreading_S3, airreading_S4; // I ADDED THINGS HERE !!!!!!!!
+
+	if (gsmAccess.status() != GSM_READY || gprs.status() != GPRS_READY || !gsmClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	    connectGSM(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	  }
+
+	  if (!mqttClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	    // MQTT client is disconnected, connect
+	    connectMQTT(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	  }
+
+	  // poll for new MQTT messages and send keep alives
+	  mqttClient.poll(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+
+	  //Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
+	    for (int i = 0; i < 12; i++) {
+	      HAL_GPIO_Writepin;
+	      delay(125);
+	      analogWrite(R_LED, 0);
+	      delay(125);
+	    }
+
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
