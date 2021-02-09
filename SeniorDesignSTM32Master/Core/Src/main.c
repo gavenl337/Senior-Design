@@ -52,6 +52,9 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
+const uint16_t NOP = 0b0000000000000000;		//no operation
+const uint16_t SET_RDAC = 0b0000010000000000;	//Write contents of serial register data to RDAC to move wiper on Digipot. MUST be ORd with data
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -85,7 +88,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t buf[12];
+	char uart_buf[50];
+	int uart_buf_len;
+	char spi_buf[20]; //buffer for the sending of SPI data
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -115,15 +121,29 @@ int main(void)
   //buffer holds the values until conversions are complete,
   //at which point the adc[] array holds the referenced values.
   HAL_ADC_Start_DMA (&hadc1, buffer, 6);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);	//set CS3 pin HIGH.
+
+  uart_buf_len =sprintf(uart_buf, "Testing line 130\r\n");	  			//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin HIGH.
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SET_RDAC, 2, 400);		//probably will throw errors!!!!!!!
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+
+  uart_buf_len =sprintf(uart_buf, "Completed Digipot 1 Transmission\r\n");	//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	strcpy((char*)buf, "Hello!\r\n");
-	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
-	HAL_Delay(500);
+	//strcpy((char*)buf, "Hello!\r\n");
+	//HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
+	//HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -276,7 +296,7 @@ static void MX_SPI1_Init(void)
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_10BIT;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
@@ -365,6 +385,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, R_LED_Pin|G_LED_Pin|Heater_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, CS3_Pin|CS2_Pin|CS1_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : Button_Pin */
   GPIO_InitStruct.Pin = Button_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -377,6 +400,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : CS3_Pin CS2_Pin CS1_Pin */
+  GPIO_InitStruct.Pin = CS3_Pin|CS2_Pin|CS1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Dip5_Pin Dip4_Pin Dip3_Pin Dip2_Pin
                            Dip1_Pin */

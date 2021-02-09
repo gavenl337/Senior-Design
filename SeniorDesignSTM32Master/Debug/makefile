@@ -54,8 +54,8 @@ all: main-build
 main-build: SeniorDesignMaster.elf secondary-outputs
 
 # Tool invocations
-SeniorDesignMaster.elf: $(OBJS) $(USER_OBJS) C:\Users\gaven\Desktop\Repositories\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld
-	arm-none-eabi-gcc -o "SeniorDesignMaster.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\gaven\Desktop\Repositories\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SeniorDesignMaster.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+SeniorDesignMaster.elf: $(OBJS) $(USER_OBJS) C:\Users\shnee\Documents\GitHub\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld
+	arm-none-eabi-gcc -o "SeniorDesignMaster.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\shnee\Documents\GitHub\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SeniorDesignMaster.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
