@@ -105,7 +105,7 @@ int main(void)
   int long sensor2ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
   int long sensor3ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
 
-  string valuePayload; // I ADDED THINGS HERE !!!!!!!!
+  char* valuePayload; // I ADDED THINGS HERE !!!!!!!!
 
   /* USER CODE END Init */
 
@@ -115,24 +115,24 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   //LowPower Sleep mode button-interrupt connection
-   LowPower.attachInterruptWakeup(BUTTON_PIN, wakeUp, CHANGE); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+  // LowPower.attachInterruptWakeup(BUTTON_PIN, wakeUp, CHANGE); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
 
    //GSM Setup
-   Serial.begin(115200); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+  // Serial.begin(115200); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
    //while (!Serial);
- }
+ //}
 
    // Optional, set the client id used for MQTT,
    // each device that is connected to the broker
    // must have a unique client id. The MQTTClient will generate
    // a client id for you based on the millis() value if not set
    //
-   mqttClient.setId("ISLGSM001"); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+  // mqttClient.setId("ISLGSM001"); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
 
    // Set the message callback, this function is
    // called when the MQTTClient receives a message
-   mqttClient.onMessage(onMessageReceived); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
- }
+  // mqttClient.onMessage(onMessageReceived); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+ //}
 
   /* USER CODE END SysInit */
 
@@ -206,15 +206,39 @@ int main(void)
 	        //Read the Sensors
 
 	       for (int i = 0; i < 19; i++) {
-	          airreading_S1 = HAL_ADC_Start_DMA(&hadc0, (uint32_t*)adc_buf, ADC_BUF_LEN); //reads the 2620 sensor input for air
-	          airreading_S2 = analogRead(SENSOR2); //reads the 2602 sensor input for air
-	          airreading_S3 = analogRead(SENSOR3); //reads the 2612 sensor input for air
+	          airreading_S1 = adc[0]; //reads the 2620 sensor input for air
+	          airreading_S2 = adc[1]; //reads the 2602 sensor input for air
+	          airreading_S3 = adc[2]; //reads the 2612 sensor input for air
 	          //save data to each respective array
 	          sensor1ValuesA[i] = airreading_S1;
 	          sensor2ValuesA[i] = airreading_S2;
 	          sensor3ValuesA[i] = airreading_S3;
 	          delay(100);//Wait before next reading
 	        }
+
+	       //Package Values into JSON for MQTT->DynamoDB
+	         valuePayload = "{\"timeStamp\":"; // I ADDED THINGS HERE !!!!!!!!
+	         strcat(&valuePayload, getTime()); // need getTime function for c
+	         strcat(&valuePayload, (",\"S1A\":[")); // I ADDED THINGS HERE !!!!!!!!
+	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, ltoa(sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
+	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
+	         }
+	         strcat(&valuePayload, ("],\"S2A\":[")); // I ADDED THINGS HERE !!!!!!!!
+	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, ltoa(sensor2ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
+	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
+	         }
+	         strcat(&valuePayload, ("],\"S3A\":[")); // I ADDED THINGS HERE !!!!!!!!
+	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, ltoa(sensor3ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
+	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
+	         }
+	         strcat(&valuePayload, ("], ")); // I ADDED THINGS HERE !!!!!!!!
+
 
 
 
