@@ -173,12 +173,52 @@ int main(void)
 	  mqttClient.poll(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
 
 	  //Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
-	    for (int i = 0; i < 12; i++) {
-	      HAL_GPIO_Writepin;
-	      delay(125);
-	      analogWrite(R_LED, 0);
-	      delay(125);
+	    for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
+	      HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	      HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
+	      HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+	      HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
 	    }
+
+	    //code to power up sensors here
+	    HAL_GPIO_Writepin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+
+	    //Fast blinking - Blinking red light 1 times per second for 5 minute/s indicating sensor warming up
+	     for (int i = 0; i < SENS_WARMING_TIME; i++) {
+	    	 HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	    	 HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
+	    	 HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+	    	 HAL_DELAY(875); // I ADDED THINGS HERE !!!!!!!!
+	     }
+
+	     //Fast Blinking (four times a second) Yellow for 5 sec warnning begining of data collection via MQTT
+	       for (int i = 0; i < 20; i++) {
+	    	   HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_GPIO_Writepin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_GPIO_Writepin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
+	       }
+
+	       //Logging Data
+	        //Collect 10 samples of ambint data
+	        //Read the Sensors
+
+	       for (int i = 0; i < 19; i++) {
+	          airreading_S1 = HAL_ADC_Start_DMA(&hadc0, (uint32_t*)adc_buf, ADC_BUF_LEN); //reads the 2620 sensor input for air
+	          airreading_S2 = analogRead(SENSOR2); //reads the 2602 sensor input for air
+	          airreading_S3 = analogRead(SENSOR3); //reads the 2612 sensor input for air
+	          //save data to each respective array
+	          sensor1ValuesA[i] = airreading_S1;
+	          sensor2ValuesA[i] = airreading_S2;
+	          sensor3ValuesA[i] = airreading_S3;
+	          delay(100);//Wait before next reading
+	        }
+
+
+
+
 
 
 
