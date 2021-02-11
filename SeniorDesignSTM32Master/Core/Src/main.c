@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h> // I ADDED THINGS HERE !!!!!!!!
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -97,6 +98,9 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
+  //define sensor warming time
+  #define SENS_WARMING_TIME 300 //approx. 5 minutes
+
   unsigned long lastMillis = 0; // I ADDED THINGS HERE !!!!!!!!
   int long sensor1ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
   int long sensor2ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
@@ -160,45 +164,45 @@ int main(void)
 	bool abortLogging = false; // I ADDED THINGS HERE !!!!!!!!
 	float airreading_S1, airreading_S2, airreading_S3, airreading_S4; // I ADDED THINGS HERE !!!!!!!!
 
-	if (gsmAccess.status() != GSM_READY || gprs.status() != GPRS_READY || !gsmClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
-	    connectGSM(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
-	  }
+	//if (gsmAccess.status() != GSM_READY || gprs.status() != GPRS_READY || !gsmClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	 //   connectGSM(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	 // }
 
-	  if (!mqttClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	 // if (!mqttClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
 	    // MQTT client is disconnected, connect
-	    connectMQTT(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
-	  }
+	//    connectMQTT(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	//  }
 
 	  // poll for new MQTT messages and send keep alives
-	  mqttClient.poll(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	//  mqttClient.poll(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
 
 	  //Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
 	    for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
-	      HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
-	      HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
-	      HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
-	      HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
+	      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	      HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+	      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+	      HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
 	    }
 
 	    //code to power up sensors here
-	    HAL_GPIO_Writepin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
 
 	    //Fast blinking - Blinking red light 1 times per second for 5 minute/s indicating sensor warming up
 	     for (int i = 0; i < SENS_WARMING_TIME; i++) {
-	    	 HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
-	    	 HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
-	    	 HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
-	    	 HAL_DELAY(875); // I ADDED THINGS HERE !!!!!!!!
+	    	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	    	 HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+	    	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+	    	 HAL_Delay(875); // I ADDED THINGS HERE !!!!!!!!
 	     }
 
 	     //Fast Blinking (four times a second) Yellow for 5 sec warnning begining of data collection via MQTT
 	       for (int i = 0; i < 20; i++) {
-	    	   HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_GPIO_Writepin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_GPIO_Writepin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_GPIO_Writepin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_DELAY(125); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+	    	   HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
 	       }
 
 	       //Logging Data
@@ -213,7 +217,7 @@ int main(void)
 	          sensor1ValuesA[i] = airreading_S1;
 	          sensor2ValuesA[i] = airreading_S2;
 	          sensor3ValuesA[i] = airreading_S3;
-	          delay(100);//Wait before next reading
+	          HAL_Delay(100);//Wait before next reading
 	        }
 
 	       //Package Values into JSON for MQTT->DynamoDB
@@ -238,6 +242,59 @@ int main(void)
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
 	         }
 	         strcat(&valuePayload, ("], ")); // I ADDED THINGS HERE !!!!!!!!
+
+	         //shows a red,yellow,green "get ready" sequence
+	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Red LED on
+	         HAL_Delay(3000);
+	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Green LED on
+	         HAL_Delay(3000);
+	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!! Red LED off
+	           //FOR USER: BREATHE INTO THE SENSOR
+
+	         //Read the Sensors for 7 seconds
+	           for (int i = 0; i < 19; i++) {
+	             airreading_S1 = adc[0]; //reads the 2620 sensor input for air
+	             airreading_S2 = adc[1]; //reads the 2602 sensor input for air
+	             airreading_S3 = adc[2]; //reads the 2612 sensor input for air
+	             //save data to each respective array
+	                sensor1ValuesB[i] = airreading_S1;
+	                sensor2ValuesB[i] = airreading_S2;
+	                sensor3ValuesB[i] = airreading_S3;
+	                HAL_Delay(100);//Wait before next reading
+	              }
+
+	           //Package Values into JSON for MQTT->DynamoDB
+	            strcat(&valuePayload, ("\"S1B\" : ["));
+	            for (int i = 0; i < 19; i++) {
+	              strcat(&valuePayload, ltoa(sensor1ValuesB[i]));
+	              if (i < 18)
+	              {strcat(&valuePayload, (","));}
+	            }
+	            strcat(&valuePayload, ("], \"S2B\" : ["));
+	            for (int i = 0; i < 19; i++) {
+	              strcat(&valuePayload, ltoa(sensor2ValuesB[i]));
+	              if (i < 18)
+	              {strcat(&valuePayload, (","));}
+	            }
+	            strcat(&valuePayload, ("], \"S3B\" : ["));
+	            for (int i = 0; i < 19; i++) {
+	              strcat(&valuePayload, ltoa(sensor3ValuesB[i]));
+	              if (i < 18)
+	              {strcat(&valuePayload, (","));}
+	            }
+	            strcat(&valuePayload, ("]} "));
+
+	             // Serial.println(valuePayload);
+	             // publishMessage(valuePayload);
+	              HAL_Delay(500);
+
+	           // digitalWrite(SENS_POWER, LOW); // should each sensor be powered off?
+	            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // Green LED off
+
+
+
+
+
 
 
 
