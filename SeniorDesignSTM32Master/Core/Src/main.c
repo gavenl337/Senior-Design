@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdbool.h> // I ADDED THINGS HERE !!!!!!!!
 #include <stdlib.h>
+#include <time.h>
 
 /* USER CODE END Includes */
 
@@ -110,6 +111,8 @@ int main(void)
   int long sensor3ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
 
   char* valuePayload; // I ADDED THINGS HERE !!!!!!!!
+  char str[40]; // how long does MQTT need to be?
+  time_t t;
 
   /* USER CODE END Init */
 
@@ -163,6 +166,8 @@ int main(void)
 
 	bool abortLogging = false; // I ADDED THINGS HERE !!!!!!!!
 	float airreading_S1, airreading_S2, airreading_S3, airreading_S4; // I ADDED THINGS HERE !!!!!!!!
+	time(&t);
+
 
 	//if (gsmAccess.status() != GSM_READY || gprs.status() != GPRS_READY || !gsmClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
 	 //   connectGSM(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
@@ -222,22 +227,22 @@ int main(void)
 
 	       //Package Values into JSON for MQTT->DynamoDB
 	         valuePayload = "{\"timeStamp\":"; // I ADDED THINGS HERE !!!!!!!!
-	         strcat(&valuePayload, getTime()); // need getTime function for c
+	         strcat(&valuePayload, ctime(&t)); // gives date time
 	         strcat(&valuePayload, (",\"S1A\":[")); // I ADDED THINGS HERE !!!!!!!!
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, ltoa(sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, sprintf(str, "%d", sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
 	         }
 	         strcat(&valuePayload, ("],\"S2A\":[")); // I ADDED THINGS HERE !!!!!!!!
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, ltoa(sensor2ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, sprintf(str, "%d", sensor2ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
 	         }
 	         strcat(&valuePayload, ("],\"S3A\":[")); // I ADDED THINGS HERE !!!!!!!!
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, ltoa(sensor3ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, sprintf(str, "%d", sensor3ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
 	         }
@@ -266,19 +271,19 @@ int main(void)
 	           //Package Values into JSON for MQTT->DynamoDB
 	            strcat(&valuePayload, ("\"S1B\" : ["));
 	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, ltoa(sensor1ValuesB[i]));
+	              strcat(&valuePayload, sprintf(str, "%d", sensor1ValuesB[i]));
 	              if (i < 18)
 	              {strcat(&valuePayload, (","));}
 	            }
 	            strcat(&valuePayload, ("], \"S2B\" : ["));
 	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, ltoa(sensor2ValuesB[i]));
+	              strcat(&valuePayload, sprintf(str, "%d", sensor2ValuesB[i]));
 	              if (i < 18)
 	              {strcat(&valuePayload, (","));}
 	            }
 	            strcat(&valuePayload, ("], \"S3B\" : ["));
 	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, ltoa(sensor3ValuesB[i]));
+	              strcat(&valuePayload, sprintf(str, "%d", sensor3ValuesB[i]));
 	              if (i < 18)
 	              {strcat(&valuePayload, (","));}
 	            }
