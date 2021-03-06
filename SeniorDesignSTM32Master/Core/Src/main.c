@@ -111,7 +111,7 @@ int main(void)
   int long sensor3ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
 
   char* valuePayload; // I ADDED THINGS HERE !!!!!!!!
-  char str[40]; // how long does MQTT need to be?
+  char str[80]; // how long does MQTT need to be?
   time_t t;
 
   /* USER CODE END Init */
@@ -230,19 +230,19 @@ int main(void)
 	         strcat(&valuePayload, ctime(&t)); // gives date time
 	         strcat(&valuePayload, (",\"S1A\":[")); // I ADDED THINGS HERE !!!!!!!!
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, sprintf(str, "%d", sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, sprintf(str, "%ld", sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
 	         }
 	         strcat(&valuePayload, ("],\"S2A\":[")); // I ADDED THINGS HERE !!!!!!!!
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, sprintf(str, "%d", sensor2ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, sprintf(str, "%ld", sensor2ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
 	         }
 	         strcat(&valuePayload, ("],\"S3A\":[")); // I ADDED THINGS HERE !!!!!!!!
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, sprintf(str, "%d", sensor3ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+	           strcat(&valuePayload, sprintf(str, "%ld", sensor3ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
 	         }
@@ -271,19 +271,19 @@ int main(void)
 	           //Package Values into JSON for MQTT->DynamoDB
 	            strcat(&valuePayload, ("\"S1B\" : ["));
 	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, sprintf(str, "%d", sensor1ValuesB[i]));
+	              strcat(&valuePayload, sprintf(str, "%ld", sensor1ValuesB[i]));
 	              if (i < 18)
 	              {strcat(&valuePayload, (","));}
 	            }
 	            strcat(&valuePayload, ("], \"S2B\" : ["));
 	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, sprintf(str, "%d", sensor2ValuesB[i]));
+	              strcat(&valuePayload, sprintf(str, "%ld", sensor2ValuesB[i]));
 	              if (i < 18)
 	              {strcat(&valuePayload, (","));}
 	            }
 	            strcat(&valuePayload, ("], \"S3B\" : ["));
 	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, sprintf(str, "%d", sensor3ValuesB[i]));
+	              strcat(&valuePayload, sprintf(str, "%ld", sensor3ValuesB[i]));
 	              if (i < 18)
 	              {strcat(&valuePayload, (","));}
 	            }
@@ -293,7 +293,7 @@ int main(void)
 	             // publishMessage(valuePayload);
 	              HAL_Delay(500);
 
-	           // digitalWrite(SENS_POWER, LOW); // should each sensor be powered off?
+	           // digitalWrite(SENS_POWER, LOW); // should each sensor be powered off? mosfet pin low
 	            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // Green LED off
 
 

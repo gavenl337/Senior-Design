@@ -543,7 +543,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 int main(void)
 {
  8000680:	b590      	push	{r4, r7, lr}
- 8000682:	f5ad 7d1f 	sub.w	sp, sp, #636	; 0x27c
+ 8000682:	f5ad 7d29 	sub.w	sp, sp, #676	; 0x2a4
  8000686:	af00      	add	r7, sp, #0
   /* USER CODE END 1 */
 
@@ -559,7 +559,7 @@ int main(void)
 
   unsigned long lastMillis = 0; // I ADDED THINGS HERE !!!!!!!!
  800068c:	2300      	movs	r3, #0
- 800068e:	f8c7 3248 	str.w	r3, [r7, #584]	; 0x248
+ 800068e:	f8c7 3270 	str.w	r3, [r7, #624]	; 0x270
   time_t t;
 
   /* USER CODE END Init */
@@ -597,18 +597,18 @@ int main(void)
   while (1)
   {
 	strcpy((char*)buf, "Hello!\r\n");
- 80006b4:	f507 730b 	add.w	r3, r7, #556	; 0x22c
+ 80006b4:	f507 7315 	add.w	r3, r7, #596	; 0x254
  80006b8:	4ac7      	ldr	r2, [pc, #796]	; (80009d8 <main+0x358>)
  80006ba:	ca07      	ldmia	r2, {r0, r1, r2}
  80006bc:	c303      	stmia	r3!, {r0, r1}
  80006be:	701a      	strb	r2, [r3, #0]
 	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
- 80006c0:	f507 730b 	add.w	r3, r7, #556	; 0x22c
+ 80006c0:	f507 7315 	add.w	r3, r7, #596	; 0x254
  80006c4:	4618      	mov	r0, r3
  80006c6:	f7ff fd83 	bl	80001d0 <strlen>
  80006ca:	4603      	mov	r3, r0
  80006cc:	b29a      	uxth	r2, r3
- 80006ce:	f507 710b 	add.w	r1, r7, #556	; 0x22c
+ 80006ce:	f507 7115 	add.w	r1, r7, #596	; 0x254
  80006d2:	f04f 33ff 	mov.w	r3, #4294967295
  80006d6:	48c1      	ldr	r0, [pc, #772]	; (80009dc <main+0x35c>)
  80006d8:	f004 fa45 	bl	8004b66 <HAL_UART_Transmit>
@@ -618,7 +618,7 @@ int main(void)
 
 	bool abortLogging = false; // I ADDED THINGS HERE !!!!!!!!
  80006e4:	2300      	movs	r3, #0
- 80006e6:	f887 3247 	strb.w	r3, [r7, #583]	; 0x247
+ 80006e6:	f887 326f 	strb.w	r3, [r7, #623]	; 0x26f
 	float airreading_S1, airreading_S2, airreading_S3, airreading_S4; // I ADDED THINGS HERE !!!!!!!!
 	time(&t);
  80006ea:	463b      	mov	r3, r7
@@ -631,7 +631,7 @@ int main(void)
 	  //Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
 	    for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
  80006f2:	2300      	movs	r3, #0
- 80006f4:	f8c7 3274 	str.w	r3, [r7, #628]	; 0x274
+ 80006f4:	f8c7 329c 	str.w	r3, [r7, #668]	; 0x29c
  80006f8:	e014      	b.n	8000724 <main+0xa4>
 	      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
  80006fa:	2201      	movs	r2, #1
@@ -650,10 +650,10 @@ int main(void)
  8000714:	207d      	movs	r0, #125	; 0x7d
  8000716:	f000 ff91 	bl	800163c <HAL_Delay>
 	    for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
- 800071a:	f8d7 3274 	ldr.w	r3, [r7, #628]	; 0x274
+ 800071a:	f8d7 329c 	ldr.w	r3, [r7, #668]	; 0x29c
  800071e:	3301      	adds	r3, #1
- 8000720:	f8c7 3274 	str.w	r3, [r7, #628]	; 0x274
- 8000724:	f8d7 3274 	ldr.w	r3, [r7, #628]	; 0x274
+ 8000720:	f8c7 329c 	str.w	r3, [r7, #668]	; 0x29c
+ 8000724:	f8d7 329c 	ldr.w	r3, [r7, #668]	; 0x29c
  8000728:	2b0b      	cmp	r3, #11
  800072a:	dde6      	ble.n	80006fa <main+0x7a>
 	    }
@@ -668,7 +668,7 @@ int main(void)
 	    //Fast blinking - Blinking red light 1 times per second for 5 minute/s indicating sensor warming up
 	     for (int i = 0; i < SENS_WARMING_TIME; i++) {
  8000738:	2300      	movs	r3, #0
- 800073a:	f8c7 3270 	str.w	r3, [r7, #624]	; 0x270
+ 800073a:	f8c7 3298 	str.w	r3, [r7, #664]	; 0x298
  800073e:	e015      	b.n	800076c <main+0xec>
 	    	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
  8000740:	2201      	movs	r2, #1
@@ -687,10 +687,10 @@ int main(void)
  800075a:	f240 306b 	movw	r0, #875	; 0x36b
  800075e:	f000 ff6d 	bl	800163c <HAL_Delay>
 	     for (int i = 0; i < SENS_WARMING_TIME; i++) {
- 8000762:	f8d7 3270 	ldr.w	r3, [r7, #624]	; 0x270
+ 8000762:	f8d7 3298 	ldr.w	r3, [r7, #664]	; 0x298
  8000766:	3301      	adds	r3, #1
- 8000768:	f8c7 3270 	str.w	r3, [r7, #624]	; 0x270
- 800076c:	f8d7 3270 	ldr.w	r3, [r7, #624]	; 0x270
+ 8000768:	f8c7 3298 	str.w	r3, [r7, #664]	; 0x298
+ 800076c:	f8d7 3298 	ldr.w	r3, [r7, #664]	; 0x298
  8000770:	f5b3 7f96 	cmp.w	r3, #300	; 0x12c
  8000774:	dbe4      	blt.n	8000740 <main+0xc0>
 	     }
@@ -698,7 +698,7 @@ int main(void)
 	     //Fast Blinking (four times a second) Yellow for 5 sec warnning begining of data collection via MQTT
 	       for (int i = 0; i < 20; i++) {
  8000776:	2300      	movs	r3, #0
- 8000778:	f8c7 326c 	str.w	r3, [r7, #620]	; 0x26c
+ 8000778:	f8c7 3294 	str.w	r3, [r7, #660]	; 0x294
  800077c:	e01e      	b.n	80007bc <main+0x13c>
 	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
  800077e:	2201      	movs	r2, #1
@@ -727,10 +727,10 @@ int main(void)
  80007ac:	207d      	movs	r0, #125	; 0x7d
  80007ae:	f000 ff45 	bl	800163c <HAL_Delay>
 	       for (int i = 0; i < 20; i++) {
- 80007b2:	f8d7 326c 	ldr.w	r3, [r7, #620]	; 0x26c
+ 80007b2:	f8d7 3294 	ldr.w	r3, [r7, #660]	; 0x294
  80007b6:	3301      	adds	r3, #1
- 80007b8:	f8c7 326c 	str.w	r3, [r7, #620]	; 0x26c
- 80007bc:	f8d7 326c 	ldr.w	r3, [r7, #620]	; 0x26c
+ 80007b8:	f8c7 3294 	str.w	r3, [r7, #660]	; 0x294
+ 80007bc:	f8d7 3294 	ldr.w	r3, [r7, #660]	; 0x294
  80007c0:	2b13      	cmp	r3, #19
  80007c2:	dddc      	ble.n	800077e <main+0xfe>
 
@@ -740,67 +740,67 @@ int main(void)
 
 	       for (int i = 0; i < 19; i++) {
  80007c4:	2300      	movs	r3, #0
- 80007c6:	f8c7 3268 	str.w	r3, [r7, #616]	; 0x268
+ 80007c6:	f8c7 3290 	str.w	r3, [r7, #656]	; 0x290
  80007ca:	e047      	b.n	800085c <main+0x1dc>
 	          airreading_S1 = adc[0]; //reads the 2620 sensor input for air
  80007cc:	4b85      	ldr	r3, [pc, #532]	; (80009e4 <main+0x364>)
  80007ce:	681b      	ldr	r3, [r3, #0]
  80007d0:	ee07 3a90 	vmov	s15, r3
  80007d4:	eef8 7a67 	vcvt.f32.u32	s15, s15
- 80007d8:	edc7 7a90 	vstr	s15, [r7, #576]	; 0x240
+ 80007d8:	edc7 7a9a 	vstr	s15, [r7, #616]	; 0x268
 	          airreading_S2 = adc[1]; //reads the 2602 sensor input for air
  80007dc:	4b81      	ldr	r3, [pc, #516]	; (80009e4 <main+0x364>)
  80007de:	685b      	ldr	r3, [r3, #4]
  80007e0:	ee07 3a90 	vmov	s15, r3
  80007e4:	eef8 7a67 	vcvt.f32.u32	s15, s15
- 80007e8:	edc7 7a8f 	vstr	s15, [r7, #572]	; 0x23c
+ 80007e8:	edc7 7a99 	vstr	s15, [r7, #612]	; 0x264
 	          airreading_S3 = adc[2]; //reads the 2612 sensor input for air
  80007ec:	4b7d      	ldr	r3, [pc, #500]	; (80009e4 <main+0x364>)
  80007ee:	689b      	ldr	r3, [r3, #8]
  80007f0:	ee07 3a90 	vmov	s15, r3
  80007f4:	eef8 7a67 	vcvt.f32.u32	s15, s15
- 80007f8:	edc7 7a8e 	vstr	s15, [r7, #568]	; 0x238
+ 80007f8:	edc7 7a98 	vstr	s15, [r7, #608]	; 0x260
 	          //save data to each respective array
 	          sensor1ValuesA[i] = airreading_S1;
- 80007fc:	edd7 7a90 	vldr	s15, [r7, #576]	; 0x240
+ 80007fc:	edd7 7a9a 	vldr	s15, [r7, #616]	; 0x268
  8000800:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  8000804:	ee17 2a90 	vmov	r2, s15
- 8000808:	f8d7 3268 	ldr.w	r3, [r7, #616]	; 0x268
+ 8000808:	f8d7 3290 	ldr.w	r3, [r7, #656]	; 0x290
  800080c:	009b      	lsls	r3, r3, #2
- 800080e:	f507 711e 	add.w	r1, r7, #632	; 0x278
+ 800080e:	f507 7128 	add.w	r1, r7, #672	; 0x2a0
  8000812:	440b      	add	r3, r1
  8000814:	f843 2ca0 	str.w	r2, [r3, #-160]
 	          sensor2ValuesA[i] = airreading_S2;
- 8000818:	edd7 7a8f 	vldr	s15, [r7, #572]	; 0x23c
+ 8000818:	edd7 7a99 	vldr	s15, [r7, #612]	; 0x264
  800081c:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  8000820:	ee17 2a90 	vmov	r2, s15
- 8000824:	f8d7 3268 	ldr.w	r3, [r7, #616]	; 0x268
+ 8000824:	f8d7 3290 	ldr.w	r3, [r7, #656]	; 0x290
  8000828:	009b      	lsls	r3, r3, #2
- 800082a:	f507 711e 	add.w	r1, r7, #632	; 0x278
+ 800082a:	f507 7128 	add.w	r1, r7, #672	; 0x2a0
  800082e:	440b      	add	r3, r1
  8000830:	f843 2cf4 	str.w	r2, [r3, #-244]
 	          sensor3ValuesA[i] = airreading_S3;
- 8000834:	edd7 7a8e 	vldr	s15, [r7, #568]	; 0x238
+ 8000834:	edd7 7a98 	vldr	s15, [r7, #608]	; 0x260
  8000838:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  800083c:	ee17 1a90 	vmov	r1, s15
- 8000840:	f507 7398 	add.w	r3, r7, #304	; 0x130
- 8000844:	f8d7 2268 	ldr.w	r2, [r7, #616]	; 0x268
+ 8000840:	f507 73ac 	add.w	r3, r7, #344	; 0x158
+ 8000844:	f8d7 2290 	ldr.w	r2, [r7, #656]	; 0x290
  8000848:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
 	          HAL_Delay(100);//Wait before next reading
  800084c:	2064      	movs	r0, #100	; 0x64
  800084e:	f000 fef5 	bl	800163c <HAL_Delay>
 	       for (int i = 0; i < 19; i++) {
- 8000852:	f8d7 3268 	ldr.w	r3, [r7, #616]	; 0x268
+ 8000852:	f8d7 3290 	ldr.w	r3, [r7, #656]	; 0x290
  8000856:	3301      	adds	r3, #1
- 8000858:	f8c7 3268 	str.w	r3, [r7, #616]	; 0x268
- 800085c:	f8d7 3268 	ldr.w	r3, [r7, #616]	; 0x268
+ 8000858:	f8c7 3290 	str.w	r3, [r7, #656]	; 0x290
+ 800085c:	f8d7 3290 	ldr.w	r3, [r7, #656]	; 0x290
  8000860:	2b12      	cmp	r3, #18
  8000862:	ddb3      	ble.n	80007cc <main+0x14c>
 	        }
 
 	       //Package Values into JSON for MQTT->DynamoDB
 	         valuePayload = "{\"timeStamp\":"; // I ADDED THINGS HERE !!!!!!!!
- 8000864:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000864:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000868:	4a5f      	ldr	r2, [pc, #380]	; (80009e8 <main+0x368>)
  800086a:	601a      	str	r2, [r3, #0]
 	         strcat(&valuePayload, ctime(&t)); // gives date time
@@ -808,17 +808,17 @@ int main(void)
  800086e:	4618      	mov	r0, r3
  8000870:	f004 fdf8 	bl	8005464 <ctime>
  8000874:	4602      	mov	r2, r0
- 8000876:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000876:	f107 0358 	add.w	r3, r7, #88	; 0x58
  800087a:	4611      	mov	r1, r2
  800087c:	4618      	mov	r0, r3
  800087e:	f005 f811 	bl	80058a4 <strcat>
 	         strcat(&valuePayload, (",\"S1A\":[")); // I ADDED THINGS HERE !!!!!!!!
- 8000882:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000882:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000886:	4618      	mov	r0, r3
  8000888:	f7ff fca2 	bl	80001d0 <strlen>
  800088c:	4603      	mov	r3, r0
  800088e:	461a      	mov	r2, r3
- 8000890:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000890:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000894:	4413      	add	r3, r2
  8000896:	4955      	ldr	r1, [pc, #340]	; (80009ec <main+0x36c>)
  8000898:	461a      	mov	r2, r3
@@ -830,12 +830,12 @@ int main(void)
  80008a4:	7213      	strb	r3, [r2, #8]
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
  80008a6:	2300      	movs	r3, #0
- 80008a8:	f8c7 3264 	str.w	r3, [r7, #612]	; 0x264
+ 80008a8:	f8c7 328c 	str.w	r3, [r7, #652]	; 0x28c
  80008ac:	e02d      	b.n	800090a <main+0x28a>
-	           strcat(&valuePayload, sprintf(str, "%d", sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
- 80008ae:	f8d7 3264 	ldr.w	r3, [r7, #612]	; 0x264
+	           strcat(&valuePayload, sprintf(str, "%ld", sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+ 80008ae:	f8d7 328c 	ldr.w	r3, [r7, #652]	; 0x28c
  80008b2:	009b      	lsls	r3, r3, #2
- 80008b4:	f507 721e 	add.w	r2, r7, #632	; 0x278
+ 80008b4:	f507 7228 	add.w	r2, r7, #672	; 0x2a0
  80008b8:	4413      	add	r3, r2
  80008ba:	f853 2ca0 	ldr.w	r2, [r3, #-160]
  80008be:	f107 0308 	add.w	r3, r7, #8
@@ -844,21 +844,21 @@ int main(void)
  80008c6:	f004 ffcd 	bl	8005864 <siprintf>
  80008ca:	4603      	mov	r3, r0
  80008cc:	461a      	mov	r2, r3
- 80008ce:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 80008ce:	f107 0358 	add.w	r3, r7, #88	; 0x58
  80008d2:	4611      	mov	r1, r2
  80008d4:	4618      	mov	r0, r3
  80008d6:	f004 ffe5 	bl	80058a4 <strcat>
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
- 80008da:	f8d7 3264 	ldr.w	r3, [r7, #612]	; 0x264
+ 80008da:	f8d7 328c 	ldr.w	r3, [r7, #652]	; 0x28c
  80008de:	2b11      	cmp	r3, #17
  80008e0:	dc0e      	bgt.n	8000900 <main+0x280>
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
- 80008e2:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 80008e2:	f107 0358 	add.w	r3, r7, #88	; 0x58
  80008e6:	4618      	mov	r0, r3
  80008e8:	f7ff fc72 	bl	80001d0 <strlen>
  80008ec:	4603      	mov	r3, r0
  80008ee:	461a      	mov	r2, r3
- 80008f0:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 80008f0:	f107 0358 	add.w	r3, r7, #88	; 0x58
  80008f4:	4413      	add	r3, r2
  80008f6:	493f      	ldr	r1, [pc, #252]	; (80009f4 <main+0x374>)
  80008f8:	461a      	mov	r2, r3
@@ -866,20 +866,20 @@ int main(void)
  80008fc:	881b      	ldrh	r3, [r3, #0]
  80008fe:	8013      	strh	r3, [r2, #0]
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
- 8000900:	f8d7 3264 	ldr.w	r3, [r7, #612]	; 0x264
+ 8000900:	f8d7 328c 	ldr.w	r3, [r7, #652]	; 0x28c
  8000904:	3301      	adds	r3, #1
- 8000906:	f8c7 3264 	str.w	r3, [r7, #612]	; 0x264
- 800090a:	f8d7 3264 	ldr.w	r3, [r7, #612]	; 0x264
+ 8000906:	f8c7 328c 	str.w	r3, [r7, #652]	; 0x28c
+ 800090a:	f8d7 328c 	ldr.w	r3, [r7, #652]	; 0x28c
  800090e:	2b12      	cmp	r3, #18
  8000910:	ddcd      	ble.n	80008ae <main+0x22e>
 	         }
 	         strcat(&valuePayload, ("],\"S2A\":[")); // I ADDED THINGS HERE !!!!!!!!
- 8000912:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000912:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000916:	4618      	mov	r0, r3
  8000918:	f7ff fc5a 	bl	80001d0 <strlen>
  800091c:	4603      	mov	r3, r0
  800091e:	461a      	mov	r2, r3
- 8000920:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000920:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000924:	4413      	add	r3, r2
  8000926:	4934      	ldr	r1, [pc, #208]	; (80009f8 <main+0x378>)
  8000928:	461a      	mov	r2, r3
@@ -891,12 +891,12 @@ int main(void)
  8000934:	8113      	strh	r3, [r2, #8]
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
  8000936:	2300      	movs	r3, #0
- 8000938:	f8c7 3260 	str.w	r3, [r7, #608]	; 0x260
+ 8000938:	f8c7 3288 	str.w	r3, [r7, #648]	; 0x288
  800093c:	e02d      	b.n	800099a <main+0x31a>
-	           strcat(&valuePayload, sprintf(str, "%d", sensor2ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
- 800093e:	f8d7 3260 	ldr.w	r3, [r7, #608]	; 0x260
+	           strcat(&valuePayload, sprintf(str, "%ld", sensor2ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+ 800093e:	f8d7 3288 	ldr.w	r3, [r7, #648]	; 0x288
  8000942:	009b      	lsls	r3, r3, #2
- 8000944:	f507 721e 	add.w	r2, r7, #632	; 0x278
+ 8000944:	f507 7228 	add.w	r2, r7, #672	; 0x2a0
  8000948:	4413      	add	r3, r2
  800094a:	f853 2cf4 	ldr.w	r2, [r3, #-244]
  800094e:	f107 0308 	add.w	r3, r7, #8
@@ -905,21 +905,21 @@ int main(void)
  8000956:	f004 ff85 	bl	8005864 <siprintf>
  800095a:	4603      	mov	r3, r0
  800095c:	461a      	mov	r2, r3
- 800095e:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 800095e:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000962:	4611      	mov	r1, r2
  8000964:	4618      	mov	r0, r3
  8000966:	f004 ff9d 	bl	80058a4 <strcat>
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
- 800096a:	f8d7 3260 	ldr.w	r3, [r7, #608]	; 0x260
+ 800096a:	f8d7 3288 	ldr.w	r3, [r7, #648]	; 0x288
  800096e:	2b11      	cmp	r3, #17
  8000970:	dc0e      	bgt.n	8000990 <main+0x310>
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
- 8000972:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000972:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000976:	4618      	mov	r0, r3
  8000978:	f7ff fc2a 	bl	80001d0 <strlen>
  800097c:	4603      	mov	r3, r0
  800097e:	461a      	mov	r2, r3
- 8000980:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000980:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000984:	4413      	add	r3, r2
  8000986:	491b      	ldr	r1, [pc, #108]	; (80009f4 <main+0x374>)
  8000988:	461a      	mov	r2, r3
@@ -927,20 +927,20 @@ int main(void)
  800098c:	881b      	ldrh	r3, [r3, #0]
  800098e:	8013      	strh	r3, [r2, #0]
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
- 8000990:	f8d7 3260 	ldr.w	r3, [r7, #608]	; 0x260
+ 8000990:	f8d7 3288 	ldr.w	r3, [r7, #648]	; 0x288
  8000994:	3301      	adds	r3, #1
- 8000996:	f8c7 3260 	str.w	r3, [r7, #608]	; 0x260
- 800099a:	f8d7 3260 	ldr.w	r3, [r7, #608]	; 0x260
+ 8000996:	f8c7 3288 	str.w	r3, [r7, #648]	; 0x288
+ 800099a:	f8d7 3288 	ldr.w	r3, [r7, #648]	; 0x288
  800099e:	2b12      	cmp	r3, #18
  80009a0:	ddcd      	ble.n	800093e <main+0x2be>
 	         }
 	         strcat(&valuePayload, ("],\"S3A\":[")); // I ADDED THINGS HERE !!!!!!!!
- 80009a2:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 80009a2:	f107 0358 	add.w	r3, r7, #88	; 0x58
  80009a6:	4618      	mov	r0, r3
  80009a8:	f7ff fc12 	bl	80001d0 <strlen>
  80009ac:	4603      	mov	r3, r0
  80009ae:	461a      	mov	r2, r3
- 80009b0:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 80009b0:	f107 0358 	add.w	r3, r7, #88	; 0x58
  80009b4:	4413      	add	r3, r2
  80009b6:	4911      	ldr	r1, [pc, #68]	; (80009fc <main+0x37c>)
  80009b8:	461a      	mov	r2, r3
@@ -952,7 +952,7 @@ int main(void)
  80009c4:	8113      	strh	r3, [r2, #8]
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
  80009c6:	2300      	movs	r3, #0
- 80009c8:	f8c7 325c 	str.w	r3, [r7, #604]	; 0x25c
+ 80009c8:	f8c7 3284 	str.w	r3, [r7, #644]	; 0x284
  80009cc:	e044      	b.n	8000a58 <main+0x3d8>
  80009ce:	bf00      	nop
  80009d0:	20000308 	.word	0x20000308
@@ -967,9 +967,9 @@ int main(void)
  80009f4:	080070bc 	.word	0x080070bc
  80009f8:	080070c0 	.word	0x080070c0
  80009fc:	080070cc 	.word	0x080070cc
-	           strcat(&valuePayload, sprintf(str, "%d", sensor3ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
- 8000a00:	f507 7398 	add.w	r3, r7, #304	; 0x130
- 8000a04:	f8d7 225c 	ldr.w	r2, [r7, #604]	; 0x25c
+	           strcat(&valuePayload, sprintf(str, "%ld", sensor3ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
+ 8000a00:	f507 73ac 	add.w	r3, r7, #344	; 0x158
+ 8000a04:	f8d7 2284 	ldr.w	r2, [r7, #644]	; 0x284
  8000a08:	f853 2022 	ldr.w	r2, [r3, r2, lsl #2]
  8000a0c:	f107 0308 	add.w	r3, r7, #8
  8000a10:	49c5      	ldr	r1, [pc, #788]	; (8000d28 <main+0x6a8>)
@@ -977,21 +977,21 @@ int main(void)
  8000a14:	f004 ff26 	bl	8005864 <siprintf>
  8000a18:	4603      	mov	r3, r0
  8000a1a:	461a      	mov	r2, r3
- 8000a1c:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000a1c:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000a20:	4611      	mov	r1, r2
  8000a22:	4618      	mov	r0, r3
  8000a24:	f004 ff3e 	bl	80058a4 <strcat>
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
- 8000a28:	f8d7 325c 	ldr.w	r3, [r7, #604]	; 0x25c
+ 8000a28:	f8d7 3284 	ldr.w	r3, [r7, #644]	; 0x284
  8000a2c:	2b11      	cmp	r3, #17
  8000a2e:	dc0e      	bgt.n	8000a4e <main+0x3ce>
 	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
- 8000a30:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000a30:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000a34:	4618      	mov	r0, r3
  8000a36:	f7ff fbcb 	bl	80001d0 <strlen>
  8000a3a:	4603      	mov	r3, r0
  8000a3c:	461a      	mov	r2, r3
- 8000a3e:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000a3e:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000a42:	4413      	add	r3, r2
  8000a44:	49b9      	ldr	r1, [pc, #740]	; (8000d2c <main+0x6ac>)
  8000a46:	461a      	mov	r2, r3
@@ -999,20 +999,20 @@ int main(void)
  8000a4a:	881b      	ldrh	r3, [r3, #0]
  8000a4c:	8013      	strh	r3, [r2, #0]
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
- 8000a4e:	f8d7 325c 	ldr.w	r3, [r7, #604]	; 0x25c
+ 8000a4e:	f8d7 3284 	ldr.w	r3, [r7, #644]	; 0x284
  8000a52:	3301      	adds	r3, #1
- 8000a54:	f8c7 325c 	str.w	r3, [r7, #604]	; 0x25c
- 8000a58:	f8d7 325c 	ldr.w	r3, [r7, #604]	; 0x25c
+ 8000a54:	f8c7 3284 	str.w	r3, [r7, #644]	; 0x284
+ 8000a58:	f8d7 3284 	ldr.w	r3, [r7, #644]	; 0x284
  8000a5c:	2b12      	cmp	r3, #18
  8000a5e:	ddcf      	ble.n	8000a00 <main+0x380>
 	         }
 	         strcat(&valuePayload, ("], ")); // I ADDED THINGS HERE !!!!!!!!
- 8000a60:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000a60:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000a64:	4618      	mov	r0, r3
  8000a66:	f7ff fbb3 	bl	80001d0 <strlen>
  8000a6a:	4603      	mov	r3, r0
  8000a6c:	461a      	mov	r2, r3
- 8000a6e:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000a6e:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000a72:	4413      	add	r3, r2
  8000a74:	4aae      	ldr	r2, [pc, #696]	; (8000d30 <main+0x6b0>)
  8000a76:	6810      	ldr	r0, [r2, #0]
@@ -1045,68 +1045,68 @@ int main(void)
 	         //Read the Sensors for 7 seconds
 	           for (int i = 0; i < 19; i++) {
  8000aa8:	2300      	movs	r3, #0
- 8000aaa:	f8c7 3258 	str.w	r3, [r7, #600]	; 0x258
+ 8000aaa:	f8c7 3280 	str.w	r3, [r7, #640]	; 0x280
  8000aae:	e043      	b.n	8000b38 <main+0x4b8>
 	             airreading_S1 = adc[0]; //reads the 2620 sensor input for air
  8000ab0:	4ba1      	ldr	r3, [pc, #644]	; (8000d38 <main+0x6b8>)
  8000ab2:	681b      	ldr	r3, [r3, #0]
  8000ab4:	ee07 3a90 	vmov	s15, r3
  8000ab8:	eef8 7a67 	vcvt.f32.u32	s15, s15
- 8000abc:	edc7 7a90 	vstr	s15, [r7, #576]	; 0x240
+ 8000abc:	edc7 7a9a 	vstr	s15, [r7, #616]	; 0x268
 	             airreading_S2 = adc[1]; //reads the 2602 sensor input for air
  8000ac0:	4b9d      	ldr	r3, [pc, #628]	; (8000d38 <main+0x6b8>)
  8000ac2:	685b      	ldr	r3, [r3, #4]
  8000ac4:	ee07 3a90 	vmov	s15, r3
  8000ac8:	eef8 7a67 	vcvt.f32.u32	s15, s15
- 8000acc:	edc7 7a8f 	vstr	s15, [r7, #572]	; 0x23c
+ 8000acc:	edc7 7a99 	vstr	s15, [r7, #612]	; 0x264
 	             airreading_S3 = adc[2]; //reads the 2612 sensor input for air
  8000ad0:	4b99      	ldr	r3, [pc, #612]	; (8000d38 <main+0x6b8>)
  8000ad2:	689b      	ldr	r3, [r3, #8]
  8000ad4:	ee07 3a90 	vmov	s15, r3
  8000ad8:	eef8 7a67 	vcvt.f32.u32	s15, s15
- 8000adc:	edc7 7a8e 	vstr	s15, [r7, #568]	; 0x238
+ 8000adc:	edc7 7a98 	vstr	s15, [r7, #608]	; 0x260
 	             //save data to each respective array
 	                sensor1ValuesB[i] = airreading_S1;
- 8000ae0:	edd7 7a90 	vldr	s15, [r7, #576]	; 0x240
+ 8000ae0:	edd7 7a9a 	vldr	s15, [r7, #616]	; 0x268
  8000ae4:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  8000ae8:	ee17 1a90 	vmov	r1, s15
- 8000aec:	f107 03dc 	add.w	r3, r7, #220	; 0xdc
- 8000af0:	f8d7 2258 	ldr.w	r2, [r7, #600]	; 0x258
+ 8000aec:	f507 7382 	add.w	r3, r7, #260	; 0x104
+ 8000af0:	f8d7 2280 	ldr.w	r2, [r7, #640]	; 0x280
  8000af4:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
 	                sensor2ValuesB[i] = airreading_S2;
- 8000af8:	edd7 7a8f 	vldr	s15, [r7, #572]	; 0x23c
+ 8000af8:	edd7 7a99 	vldr	s15, [r7, #612]	; 0x264
  8000afc:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  8000b00:	ee17 1a90 	vmov	r1, s15
- 8000b04:	f107 0388 	add.w	r3, r7, #136	; 0x88
- 8000b08:	f8d7 2258 	ldr.w	r2, [r7, #600]	; 0x258
+ 8000b04:	f107 03b0 	add.w	r3, r7, #176	; 0xb0
+ 8000b08:	f8d7 2280 	ldr.w	r2, [r7, #640]	; 0x280
  8000b0c:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
 	                sensor3ValuesB[i] = airreading_S3;
- 8000b10:	edd7 7a8e 	vldr	s15, [r7, #568]	; 0x238
+ 8000b10:	edd7 7a98 	vldr	s15, [r7, #608]	; 0x260
  8000b14:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  8000b18:	ee17 1a90 	vmov	r1, s15
- 8000b1c:	f107 0334 	add.w	r3, r7, #52	; 0x34
- 8000b20:	f8d7 2258 	ldr.w	r2, [r7, #600]	; 0x258
+ 8000b1c:	f107 035c 	add.w	r3, r7, #92	; 0x5c
+ 8000b20:	f8d7 2280 	ldr.w	r2, [r7, #640]	; 0x280
  8000b24:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
 	                HAL_Delay(100);//Wait before next reading
  8000b28:	2064      	movs	r0, #100	; 0x64
  8000b2a:	f000 fd87 	bl	800163c <HAL_Delay>
 	           for (int i = 0; i < 19; i++) {
- 8000b2e:	f8d7 3258 	ldr.w	r3, [r7, #600]	; 0x258
+ 8000b2e:	f8d7 3280 	ldr.w	r3, [r7, #640]	; 0x280
  8000b32:	3301      	adds	r3, #1
- 8000b34:	f8c7 3258 	str.w	r3, [r7, #600]	; 0x258
- 8000b38:	f8d7 3258 	ldr.w	r3, [r7, #600]	; 0x258
+ 8000b34:	f8c7 3280 	str.w	r3, [r7, #640]	; 0x280
+ 8000b38:	f8d7 3280 	ldr.w	r3, [r7, #640]	; 0x280
  8000b3c:	2b12      	cmp	r3, #18
  8000b3e:	ddb7      	ble.n	8000ab0 <main+0x430>
 	              }
 
 	           //Package Values into JSON for MQTT->DynamoDB
 	            strcat(&valuePayload, ("\"S1B\" : ["));
- 8000b40:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000b40:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000b44:	4618      	mov	r0, r3
  8000b46:	f7ff fb43 	bl	80001d0 <strlen>
  8000b4a:	4603      	mov	r3, r0
  8000b4c:	461a      	mov	r2, r3
- 8000b4e:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000b4e:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000b52:	4413      	add	r3, r2
  8000b54:	4979      	ldr	r1, [pc, #484]	; (8000d3c <main+0x6bc>)
  8000b56:	461a      	mov	r2, r3
@@ -1118,11 +1118,11 @@ int main(void)
  8000b62:	8113      	strh	r3, [r2, #8]
 	            for (int i = 0; i < 19; i++) {
  8000b64:	2300      	movs	r3, #0
- 8000b66:	f8c7 3254 	str.w	r3, [r7, #596]	; 0x254
+ 8000b66:	f8c7 327c 	str.w	r3, [r7, #636]	; 0x27c
  8000b6a:	e02b      	b.n	8000bc4 <main+0x544>
-	              strcat(&valuePayload, sprintf(str, "%d", sensor1ValuesB[i]));
- 8000b6c:	f107 03dc 	add.w	r3, r7, #220	; 0xdc
- 8000b70:	f8d7 2254 	ldr.w	r2, [r7, #596]	; 0x254
+	              strcat(&valuePayload, sprintf(str, "%ld", sensor1ValuesB[i]));
+ 8000b6c:	f507 7382 	add.w	r3, r7, #260	; 0x104
+ 8000b70:	f8d7 227c 	ldr.w	r2, [r7, #636]	; 0x27c
  8000b74:	f853 2022 	ldr.w	r2, [r3, r2, lsl #2]
  8000b78:	f107 0308 	add.w	r3, r7, #8
  8000b7c:	496a      	ldr	r1, [pc, #424]	; (8000d28 <main+0x6a8>)
@@ -1130,21 +1130,21 @@ int main(void)
  8000b80:	f004 fe70 	bl	8005864 <siprintf>
  8000b84:	4603      	mov	r3, r0
  8000b86:	461a      	mov	r2, r3
- 8000b88:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000b88:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000b8c:	4611      	mov	r1, r2
  8000b8e:	4618      	mov	r0, r3
  8000b90:	f004 fe88 	bl	80058a4 <strcat>
 	              if (i < 18)
- 8000b94:	f8d7 3254 	ldr.w	r3, [r7, #596]	; 0x254
+ 8000b94:	f8d7 327c 	ldr.w	r3, [r7, #636]	; 0x27c
  8000b98:	2b11      	cmp	r3, #17
  8000b9a:	dc0e      	bgt.n	8000bba <main+0x53a>
 	              {strcat(&valuePayload, (","));}
- 8000b9c:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000b9c:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000ba0:	4618      	mov	r0, r3
  8000ba2:	f7ff fb15 	bl	80001d0 <strlen>
  8000ba6:	4603      	mov	r3, r0
  8000ba8:	461a      	mov	r2, r3
- 8000baa:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000baa:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000bae:	4413      	add	r3, r2
  8000bb0:	495e      	ldr	r1, [pc, #376]	; (8000d2c <main+0x6ac>)
  8000bb2:	461a      	mov	r2, r3
@@ -1152,20 +1152,20 @@ int main(void)
  8000bb6:	881b      	ldrh	r3, [r3, #0]
  8000bb8:	8013      	strh	r3, [r2, #0]
 	            for (int i = 0; i < 19; i++) {
- 8000bba:	f8d7 3254 	ldr.w	r3, [r7, #596]	; 0x254
+ 8000bba:	f8d7 327c 	ldr.w	r3, [r7, #636]	; 0x27c
  8000bbe:	3301      	adds	r3, #1
- 8000bc0:	f8c7 3254 	str.w	r3, [r7, #596]	; 0x254
- 8000bc4:	f8d7 3254 	ldr.w	r3, [r7, #596]	; 0x254
+ 8000bc0:	f8c7 327c 	str.w	r3, [r7, #636]	; 0x27c
+ 8000bc4:	f8d7 327c 	ldr.w	r3, [r7, #636]	; 0x27c
  8000bc8:	2b12      	cmp	r3, #18
  8000bca:	ddcf      	ble.n	8000b6c <main+0x4ec>
 	            }
 	            strcat(&valuePayload, ("], \"S2B\" : ["));
- 8000bcc:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000bcc:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000bd0:	4618      	mov	r0, r3
  8000bd2:	f7ff fafd 	bl	80001d0 <strlen>
  8000bd6:	4603      	mov	r3, r0
  8000bd8:	461a      	mov	r2, r3
- 8000bda:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000bda:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000bde:	4413      	add	r3, r2
  8000be0:	4a57      	ldr	r2, [pc, #348]	; (8000d40 <main+0x6c0>)
  8000be2:	461c      	mov	r4, r3
@@ -1178,11 +1178,11 @@ int main(void)
  8000bf0:	7323      	strb	r3, [r4, #12]
 	            for (int i = 0; i < 19; i++) {
  8000bf2:	2300      	movs	r3, #0
- 8000bf4:	f8c7 3250 	str.w	r3, [r7, #592]	; 0x250
+ 8000bf4:	f8c7 3278 	str.w	r3, [r7, #632]	; 0x278
  8000bf8:	e02b      	b.n	8000c52 <main+0x5d2>
-	              strcat(&valuePayload, sprintf(str, "%d", sensor2ValuesB[i]));
- 8000bfa:	f107 0388 	add.w	r3, r7, #136	; 0x88
- 8000bfe:	f8d7 2250 	ldr.w	r2, [r7, #592]	; 0x250
+	              strcat(&valuePayload, sprintf(str, "%ld", sensor2ValuesB[i]));
+ 8000bfa:	f107 03b0 	add.w	r3, r7, #176	; 0xb0
+ 8000bfe:	f8d7 2278 	ldr.w	r2, [r7, #632]	; 0x278
  8000c02:	f853 2022 	ldr.w	r2, [r3, r2, lsl #2]
  8000c06:	f107 0308 	add.w	r3, r7, #8
  8000c0a:	4947      	ldr	r1, [pc, #284]	; (8000d28 <main+0x6a8>)
@@ -1190,21 +1190,21 @@ int main(void)
  8000c0e:	f004 fe29 	bl	8005864 <siprintf>
  8000c12:	4603      	mov	r3, r0
  8000c14:	461a      	mov	r2, r3
- 8000c16:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000c16:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000c1a:	4611      	mov	r1, r2
  8000c1c:	4618      	mov	r0, r3
  8000c1e:	f004 fe41 	bl	80058a4 <strcat>
 	              if (i < 18)
- 8000c22:	f8d7 3250 	ldr.w	r3, [r7, #592]	; 0x250
+ 8000c22:	f8d7 3278 	ldr.w	r3, [r7, #632]	; 0x278
  8000c26:	2b11      	cmp	r3, #17
  8000c28:	dc0e      	bgt.n	8000c48 <main+0x5c8>
 	              {strcat(&valuePayload, (","));}
- 8000c2a:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000c2a:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000c2e:	4618      	mov	r0, r3
  8000c30:	f7ff face 	bl	80001d0 <strlen>
  8000c34:	4603      	mov	r3, r0
  8000c36:	461a      	mov	r2, r3
- 8000c38:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000c38:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000c3c:	4413      	add	r3, r2
  8000c3e:	493b      	ldr	r1, [pc, #236]	; (8000d2c <main+0x6ac>)
  8000c40:	461a      	mov	r2, r3
@@ -1212,20 +1212,20 @@ int main(void)
  8000c44:	881b      	ldrh	r3, [r3, #0]
  8000c46:	8013      	strh	r3, [r2, #0]
 	            for (int i = 0; i < 19; i++) {
- 8000c48:	f8d7 3250 	ldr.w	r3, [r7, #592]	; 0x250
+ 8000c48:	f8d7 3278 	ldr.w	r3, [r7, #632]	; 0x278
  8000c4c:	3301      	adds	r3, #1
- 8000c4e:	f8c7 3250 	str.w	r3, [r7, #592]	; 0x250
- 8000c52:	f8d7 3250 	ldr.w	r3, [r7, #592]	; 0x250
+ 8000c4e:	f8c7 3278 	str.w	r3, [r7, #632]	; 0x278
+ 8000c52:	f8d7 3278 	ldr.w	r3, [r7, #632]	; 0x278
  8000c56:	2b12      	cmp	r3, #18
  8000c58:	ddcf      	ble.n	8000bfa <main+0x57a>
 	            }
 	            strcat(&valuePayload, ("], \"S3B\" : ["));
- 8000c5a:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000c5a:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000c5e:	4618      	mov	r0, r3
  8000c60:	f7ff fab6 	bl	80001d0 <strlen>
  8000c64:	4603      	mov	r3, r0
  8000c66:	461a      	mov	r2, r3
- 8000c68:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000c68:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000c6c:	4413      	add	r3, r2
  8000c6e:	4a35      	ldr	r2, [pc, #212]	; (8000d44 <main+0x6c4>)
  8000c70:	461c      	mov	r4, r3
@@ -1238,11 +1238,11 @@ int main(void)
  8000c7e:	7323      	strb	r3, [r4, #12]
 	            for (int i = 0; i < 19; i++) {
  8000c80:	2300      	movs	r3, #0
- 8000c82:	f8c7 324c 	str.w	r3, [r7, #588]	; 0x24c
+ 8000c82:	f8c7 3274 	str.w	r3, [r7, #628]	; 0x274
  8000c86:	e02b      	b.n	8000ce0 <main+0x660>
-	              strcat(&valuePayload, sprintf(str, "%d", sensor3ValuesB[i]));
- 8000c88:	f107 0334 	add.w	r3, r7, #52	; 0x34
- 8000c8c:	f8d7 224c 	ldr.w	r2, [r7, #588]	; 0x24c
+	              strcat(&valuePayload, sprintf(str, "%ld", sensor3ValuesB[i]));
+ 8000c88:	f107 035c 	add.w	r3, r7, #92	; 0x5c
+ 8000c8c:	f8d7 2274 	ldr.w	r2, [r7, #628]	; 0x274
  8000c90:	f853 2022 	ldr.w	r2, [r3, r2, lsl #2]
  8000c94:	f107 0308 	add.w	r3, r7, #8
  8000c98:	4923      	ldr	r1, [pc, #140]	; (8000d28 <main+0x6a8>)
@@ -1250,21 +1250,21 @@ int main(void)
  8000c9c:	f004 fde2 	bl	8005864 <siprintf>
  8000ca0:	4603      	mov	r3, r0
  8000ca2:	461a      	mov	r2, r3
- 8000ca4:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000ca4:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000ca8:	4611      	mov	r1, r2
  8000caa:	4618      	mov	r0, r3
  8000cac:	f004 fdfa 	bl	80058a4 <strcat>
 	              if (i < 18)
- 8000cb0:	f8d7 324c 	ldr.w	r3, [r7, #588]	; 0x24c
+ 8000cb0:	f8d7 3274 	ldr.w	r3, [r7, #628]	; 0x274
  8000cb4:	2b11      	cmp	r3, #17
  8000cb6:	dc0e      	bgt.n	8000cd6 <main+0x656>
 	              {strcat(&valuePayload, (","));}
- 8000cb8:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000cb8:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000cbc:	4618      	mov	r0, r3
  8000cbe:	f7ff fa87 	bl	80001d0 <strlen>
  8000cc2:	4603      	mov	r3, r0
  8000cc4:	461a      	mov	r2, r3
- 8000cc6:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000cc6:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000cca:	4413      	add	r3, r2
  8000ccc:	4917      	ldr	r1, [pc, #92]	; (8000d2c <main+0x6ac>)
  8000cce:	461a      	mov	r2, r3
@@ -1272,20 +1272,20 @@ int main(void)
  8000cd2:	881b      	ldrh	r3, [r3, #0]
  8000cd4:	8013      	strh	r3, [r2, #0]
 	            for (int i = 0; i < 19; i++) {
- 8000cd6:	f8d7 324c 	ldr.w	r3, [r7, #588]	; 0x24c
+ 8000cd6:	f8d7 3274 	ldr.w	r3, [r7, #628]	; 0x274
  8000cda:	3301      	adds	r3, #1
- 8000cdc:	f8c7 324c 	str.w	r3, [r7, #588]	; 0x24c
- 8000ce0:	f8d7 324c 	ldr.w	r3, [r7, #588]	; 0x24c
+ 8000cdc:	f8c7 3274 	str.w	r3, [r7, #628]	; 0x274
+ 8000ce0:	f8d7 3274 	ldr.w	r3, [r7, #628]	; 0x274
  8000ce4:	2b12      	cmp	r3, #18
  8000ce6:	ddcf      	ble.n	8000c88 <main+0x608>
 	            }
 	            strcat(&valuePayload, ("]} "));
- 8000ce8:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000ce8:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000cec:	4618      	mov	r0, r3
  8000cee:	f7ff fa6f 	bl	80001d0 <strlen>
  8000cf2:	4603      	mov	r3, r0
  8000cf4:	461a      	mov	r2, r3
- 8000cf6:	f107 0330 	add.w	r3, r7, #48	; 0x30
+ 8000cf6:	f107 0358 	add.w	r3, r7, #88	; 0x58
  8000cfa:	4413      	add	r3, r2
  8000cfc:	4a12      	ldr	r2, [pc, #72]	; (8000d48 <main+0x6c8>)
  8000cfe:	6810      	ldr	r0, [r2, #0]
@@ -1297,7 +1297,7 @@ int main(void)
  8000d02:	f44f 70fa 	mov.w	r0, #500	; 0x1f4
  8000d06:	f000 fc99 	bl	800163c <HAL_Delay>
 
-	           // digitalWrite(SENS_POWER, LOW); // should each sensor be powered off?
+	           // digitalWrite(SENS_POWER, LOW); // should each sensor be powered off? mosfet pin low
 	            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // Green LED off
  8000d0a:	2200      	movs	r2, #0
  8000d0c:	2104      	movs	r1, #4
