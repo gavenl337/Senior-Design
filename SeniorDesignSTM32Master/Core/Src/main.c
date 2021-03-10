@@ -52,8 +52,12 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-const uint16_t NOP = 0b0000000000000000;		//no operation
-const uint16_t SET_RDAC = 0b0000010000000000;	//Write contents of serial register data to RDAC to move wiper on Digipot. MUST be ORd with data
+const uint16_t NOP = 0b0000000000000000;			// no operation
+const uint16_t WRITE_RDAC = 0b0000010000000000;		// Write contents of serial register data to RDAC to move wiper on Digipot. MUST be ORd with data
+const uint16_t READ_RDAC = 0b0000100000000000; 		// Read contents from RDAC register
+const uint16_t ENABLE_WRITE = 0b0001110000000010;	// Enable the writing of registers. Must be used after wakeup
+const uint16_t SHUTOWN = 0b0010010000000001;		// Place digipot in shutdown mode
+const uint16_t WAKEUP = 0b0010010000000000;			// Place digipot in Wakeup mode
 
 /* USER CODE END PV */
 
@@ -62,8 +66,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -88,9 +92,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	char uart_buf[50];
+	char uart_buf[50];	//buffer for output data
 	int uart_buf_len;
-	char spi_buf[20]; //buffer for the sending of SPI data
 
   /* USER CODE END 1 */
 
@@ -114,8 +117,8 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_SPI1_Init();
-  MX_USART2_UART_Init();
   MX_ADC1_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   //DMA stores ADC values in memory to be called back when needed.
   //buffer holds the values until conversions are complete,
@@ -125,15 +128,48 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);	//set CS3 pin HIGH.
 
-  uart_buf_len =sprintf(uart_buf, "Testing line 130\r\n");	  			//load print buffer with message
+  uart_buf_len =sprintf(uart_buf, "Begin resetting and initializing digi pots\r\n");	  			//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
 
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin HIGH.
-  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SET_RDAC, 2, 400);		//probably will throw errors!!!!!!!
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&WAKEUP, 2, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+  HAL_Delay(100);
 
-  uart_buf_len =sprintf(uart_buf, "Completed Digipot 1 Transmission\r\n");	//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin HIGH.
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&ENABLE_WRITE, 2, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+  uart_buf_len =sprintf(uart_buf, "Initialized Digi Pot: 1\r\n");	  			//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+  HAL_Delay(100);
+
+
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);	//set CS2 pin HIGH.
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&WAKEUP, 2, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
+  HAL_Delay(100);
+
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);	//set CS2 pin HIGH.
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&ENABLE_WRITE, 2, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
+  uart_buf_len =sprintf(uart_buf, "Initialized Digi Pot: 2\r\n");	  			//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+  HAL_Delay(100);
+
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);	//set CS3 pin HIGH.
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&WAKEUP, 2, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);	//set CS3 pin HIGH.
+  HAL_Delay(100);
+
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);	//set CS3 pin HIGH.
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&ENABLE_WRITE, 2, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);	//set CS3 pin HIGH.
+  uart_buf_len =sprintf(uart_buf, "Initialized Digi Pot: 3\r\n");	  			//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+  HAL_Delay(100);
+
+  //uart_buf_len =sprintf(uart_buf, "Completed Digipot 1 Transmission\r\n");	//load print buffer with message
+  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
   /* USER CODE END 2 */
 
@@ -336,7 +372,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_EVEN;
+  huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
