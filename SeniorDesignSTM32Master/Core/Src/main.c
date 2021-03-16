@@ -110,7 +110,7 @@ int main(void)
   int long sensor2ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
   int long sensor3ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
 
-  char* valuePayload; // I ADDED THINGS HERE !!!!!!!!
+  char *valuePayload; // I ADDED THINGS HERE !!!!!!!!
   char str[80]; // how long does MQTT need to be?
   time_t t;
 
@@ -227,8 +227,10 @@ int main(void)
 
 	       //Package Values into JSON for MQTT->DynamoDB
 	         valuePayload = "{\"timeStamp\":"; // I ADDED THINGS HERE !!!!!!!!
-	         strcat(&valuePayload, ctime(&t)); // gives date time
-	         strcat(&valuePayload, (",\"S1A\":[")); // I ADDED THINGS HERE !!!!!!!!
+	         char *timeStr = ctime(&t);
+	         char *nl = strrchr(timeStr,"\n");
+	         strcat(&valuePayload, timeStr); // gives date time
+	         strcat(&valuePayload, ",\"S1A\":["); // I ADDED THINGS HERE !!!!!!!!
 	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
 	           strcat(&valuePayload, sprintf(str, "%ld", sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
 	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
@@ -293,7 +295,7 @@ int main(void)
 	             // publishMessage(valuePayload);
 	              HAL_Delay(500);
 
-	           // digitalWrite(SENS_POWER, LOW); // should each sensor be powered off? mosfet pin low
+	            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // mosfet pin low (stops current flow to heater pins)
 	            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // Green LED off
 
 
