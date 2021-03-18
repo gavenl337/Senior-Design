@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdio.h>
 
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,15 +50,16 @@ DMA_HandleTypeDef hdma_adc1;
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 
-const uint16_t NOP = 0b0000000000000000;			// no operation
-const uint16_t WRITE_RDAC = 0b0000010000000000;		// Write contents of serial register data to RDAC to move wiper on Digipot. MUST be ORd with data
-const uint16_t READ_RDAC = 0b0000100000000000; 		// Read contents from RDAC register
-const uint16_t ENABLE_WRITE = 0b0001110000000010;	// Enable the writing of registers. Must be used after wakeup
-const uint16_t SHUTOWN = 0b0010010000000001;		// Place digipot in shutdown mode
-const uint16_t WAKEUP = 0b0010010000000000;			// Place digipot in Wakeup mode
+//const uint16_t NOP = 0b0000000000000000;			// no operation
+//const uint16_t WRITE_RDAC = 0b0000010000000000;		// Write contents of serial register data to RDAC to move wiper on Digipot. MUST be ORd with data
+//const uint16_t READ_RDAC = 0b0000100000000000; 		// Read contents from RDAC register
+//const uint16_t ENABLE_WRITE = 0b0001110000000010;	// Enable the writing of registers. Must be used after wakeup
+//const uint16_t SHUTOWN = 0b0010010000000001;		// Place digipot in shutdown mode
+//const uint16_t WAKEUP = 0b0010010000000000;			// Place digipot in Wakeup mode
 
 /* USER CODE END PV */
 
@@ -68,12 +70,18 @@ static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int displayResults(int measurement, int i, int val);
+int digitalPotWrite(int value);
+int targetCheck(int val, int target, int i);
+
+
 uint32_t adc[6], buffer[6], sensor1, sensor2, sensor3, pot1in, pot2in, pot3in;
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
@@ -92,7 +100,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	char uart_buf[50];	//buffer for output data
+	uint8_t MSG = {'\0'};
+	char uart_buf[50] = {'\0'};	//buffer for output data
 	int uart_buf_len;
 
   /* USER CODE END 1 */
@@ -103,6 +112,11 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+	//byte address = 0x00;
+	int val = 0;  // variable to store the value read
+	int i = 128; //starting value of 540
+	int target = 256; //target analog bit value
+	int tNum = 1;
 
   /* USER CODE END Init */
 
@@ -119,11 +133,13 @@ int main(void)
   MX_SPI1_Init();
   MX_ADC1_Init();
   MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   //DMA stores ADC values in memory to be called back when needed.
   //buffer holds the values until conversions are complete,
   //at which point the adc[] array holds the referenced values.
   HAL_ADC_Start_DMA (&hadc1, buffer, 6);
+  /*
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);	//set CS3 pin HIGH.
@@ -167,7 +183,7 @@ int main(void)
   uart_buf_len =sprintf(uart_buf, "Initialized Digi Pot: 3\r\n");	  			//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
   HAL_Delay(100);
-
+  */
   //uart_buf_len =sprintf(uart_buf, "Completed Digipot 1 Transmission\r\n");	//load print buffer with message
   //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
@@ -175,8 +191,23 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+  while (1){
+	  for(int measurement = 0; measurement <= 10; measurement++){
+	  HAL_ADC_Start(&hadc1);								//Start ADC conversion
+	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);		//wait for ADC conversion
+	  val = HAL_ADC_GetValue(&hadc1);
+	  i = targetCheck(val, target, i);
+	  //dataString = createCSV(val,val,val,tNum);
+	  if (i > 128){
+	    i = 128;
+	  }
+	  if (i < 0){
+	    i = 0;
+	  }
+
+	  displayResults(measurement, i, val);
+	  digitalPotWrite(i);
+	  HAL_Delay(1000);
 	//strcpy((char*)buf, "Hello!\r\n");
 	//HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
 	//HAL_Delay(500);
@@ -189,6 +220,9 @@ int main(void)
 	  //Using DMA to scan ADC values. Array adc[] holds the values
 	  //from the 6 ADC inputs. sensor1=adc[0] sensor2=adc[1] etc.
   }
+	tNum++;
+	HAL_Delay(3000);
+}
   /* USER CODE END 3 */
 }
 
@@ -227,8 +261,10 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3
+                              |RCC_PERIPHCLK_ADC;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
   PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
@@ -332,9 +368,9 @@ static void MX_SPI1_Init(void)
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
+  hspi1.Init.DataSize = SPI_DATASIZE_7BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
@@ -342,7 +378,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
@@ -385,6 +421,41 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
 
 }
 
@@ -455,7 +526,48 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+int displayResults(int measurement, int i, int val){
+  float voltage = ((5.000/1024) * val);
+  float potValue = (10000/128) * i;
 
+  uint8_t MSG = {'\0'};
+  char uart_buf[50] = {'\0'};	//buffer for output data
+  int uart_buf_len;
+
+  //sprintf(uart_buf, "Test # %d", measurement);	  			//load print buffer with message
+  //HAL_UART_Transmit(&huart2, (uint8_t *)MSG, uart_buf_len, 100);		//print to terminal
+
+  uart_buf_len =sprintf(uart_buf, "\tPotentiometer Bit Value: {i}\n");	  	//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+  /*
+  uart_buf_len =sprintf(uart_buf, "\tPotentiometer (Ohms): {potValue}\n");	//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+  uart_buf_len =sprintf(uart_buf, "\tOutput Bit Value: {val}\n");	  		//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+  uart_buf_len =sprintf(uart_buf, "\tVoltage: {voltage}V\n");	  			//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+  //-------------------------------------------------------
+
+  uart_buf_len =sprintf(uart_buf, "Test # {measurement}\n");	  			//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+  uart_buf_len =sprintf(uart_buf, "\tPotentiometer Bit Value: {i}\n");	  	//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+  uart_buf_len =sprintf(uart_buf, "\tPotentiometer (Ohms): {potValue}\n");	//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+  uart_buf_len =sprintf(uart_buf, "\tOutput Bit Value: {val}\n");	  		//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+  uart_buf_len =sprintf(uart_buf, "\tVoltage: {voltage}V\n");	  			//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+  */
+}
 /* USER CODE END 4 */
 
 /**

@@ -64,6 +64,8 @@ void Error_Handler(void);
 #define Sensor2_GPIO_Port GPIOC
 #define Sensor3_Pin GPIO_PIN_2
 #define Sensor3_GPIO_Port GPIOC
+#define SIM_TX_Pin GPIO_PIN_2
+#define SIM_TX_GPIO_Port GPIOA
 #define Pot1_Pin GPIO_PIN_6
 #define Pot1_GPIO_Port GPIOA
 #define Pot2_Pin GPIO_PIN_7
