@@ -71,17 +71,16 @@ static void MX_SPI1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
+
 /* USER CODE BEGIN PFP */
+void displayResults(int measurement, int i, int val);
+void digitalPotWrite(int value);
+int targetCheck(int val, int target, int i);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int displayResults(int measurement, int i, int val);
-int digitalPotWrite(int value);
-int targetCheck(int val, int target, int i);
-
-
 uint32_t adc[6], buffer[6], sensor1, sensor2, sensor3, pot1in, pot2in, pot3in;
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
@@ -100,9 +99,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t MSG = {'\0'};
 	char uart_buf[50] = {'\0'};	//buffer for output data
-	int uart_buf_len;
+	int uart_buf_len = {'\0'};
 
   /* USER CODE END 1 */
 
@@ -526,32 +524,33 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int displayResults(int measurement, int i, int val){
+void displayResults(int measurement, int i, int val){
+  char uart_buf[50] = {'\0'};	//buffer for output data
+  int uart_buf_len = {'\0'};
   float voltage = ((5.000/1024) * val);
   float potValue = (10000/128) * i;
-
-  uint8_t MSG = {'\0'};
-  char uart_buf[50] = {'\0'};	//buffer for output data
-  int uart_buf_len;
 
   //sprintf(uart_buf, "Test # %d", measurement);	  			//load print buffer with message
   //HAL_UART_Transmit(&huart2, (uint8_t *)MSG, uart_buf_len, 100);		//print to terminal
 
-  uart_buf_len =sprintf(uart_buf, "\tPotentiometer Bit Value: {i}\n");	  	//load print buffer with message
+  uart_buf_len =sprintf(uart_buf, "Testing #%d\n", measurement);	  	//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-  /*
-  uart_buf_len =sprintf(uart_buf, "\tPotentiometer (Ohms): {potValue}\n");	//load print buffer with message
+  uart_buf_len =sprintf(uart_buf, "\r\tPotentiometer Bit Value: %d\n", i);	//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-  uart_buf_len =sprintf(uart_buf, "\tOutput Bit Value: {val}\n");	  		//load print buffer with message
+  uart_buf_len =sprintf(uart_buf, "\r\tPotentiometer (Ohms): %g\n", potValue);	//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-  uart_buf_len =sprintf(uart_buf, "\tVoltage: {voltage}V\n");	  			//load print buffer with message
+  uart_buf_len =sprintf(uart_buf, "\r\tOutput Bit Value: %d\n", val);	  		//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
+  uart_buf_len =sprintf(uart_buf, "\r\tVoltage: %gV\n\n\r", voltage);	  			//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+}
   //-------------------------------------------------------
-
+/*
   uart_buf_len =sprintf(uart_buf, "Test # {measurement}\n");	  			//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
@@ -566,8 +565,75 @@ int displayResults(int measurement, int i, int val){
 
   uart_buf_len =sprintf(uart_buf, "\tVoltage: {voltage}V\n");	  			//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-  */
+*/
+
+int targetCheck(int val, int target, int i){
+	//check for distance val is from the target
+	//if the analog value is greater than 50% of the target value, decrease 'i' by 50
+	if (val > 1.50 * target){
+	  i = i - 50;
+	}
+	//if the analog value is greater than 40% of the target value, decrease 'i' by 40
+	else if (val > 1.40 * target){
+	  i = i - 40;
+	}
+	//if the analog value is greater than 30% of the target value, decrease 'i' by 30
+	else if (val > 1.30 * target){
+	  i = i - 30;
+	}
+	//if the analog value is greater than 20% of the target value, decrease 'i' by 20
+	else if (val > 1.20 * target){
+	  i = i - 20;
+	}
+	//if the analog value is greater than 10% of the target value, decrease 'i' by 10
+	else if (val > 1.10 * target){
+	  i = i - 10;
+	}
+	//if the analog value is greater than 20% of the target value, decrease 'i' by 5
+	else if (val > 1.04 * target){
+	  i = i - 5;
+	}
+	//if the analog value is greater than 20% of the target value, decrease 'i' by 1
+	else if (val > target){
+	  i = i - 1;
+	}
+	//--------------------------------------------------------------------------------------------------------------
+	//if the analog value is greater than 20% of the target value, decrease 'i' by 50
+	else if (val < (1- 0.50) * target){
+	  i = i + 50;
+	}
+	else if (val < (1- 0.04) * target){
+	  i = i + 5;
+	}
+	//if the analog value is greater than 40% of the target value, decrease 'i' by 50
+	else if (val < (1- 0.10) * target){
+	  i = i + 10;
+	}
+	//if the analog value is greater than 30% of the target value, decrease 'i' by 50
+	else if (val < (1- 0.20) * target){
+	  i = i + 20;
+	}
+	//if the analog value is greater than 20% of the target value, decrease 'i' by 50
+	else if (val < (1- 0.30) * target){
+	  i = i + 30;
+	}
+	//if the analog value is greater than 10% of the target value, decrease 'i' by 50
+	else if (val < (1- 0.40) * target){
+	  i = i + 40;
+	}
+	else if (val < target){
+	  i = i + 1;
+	}
+	return i;
 }
+
+void digitalPotWrite(int value){
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin HIGH.
+	HAL_SPI_Transmit(&hspi1, (uint8_t *)&value, 2, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+	HAL_Delay(100);
+	}
+
 /* USER CODE END 4 */
 
 /**
