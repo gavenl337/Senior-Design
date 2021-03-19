@@ -64,14 +64,10 @@ void Error_Handler(void);
 #define Sensor2_GPIO_Port GPIOC
 #define Sensor3_Pin GPIO_PIN_2
 #define Sensor3_GPIO_Port GPIOC
+#define SPI1_ADC_Pin GPIO_PIN_0
+#define SPI1_ADC_GPIO_Port GPIOA
 #define SIM_TX_Pin GPIO_PIN_2
 #define SIM_TX_GPIO_Port GPIOA
-#define Pot1_Pin GPIO_PIN_6
-#define Pot1_GPIO_Port GPIOA
-#define Pot2_Pin GPIO_PIN_7
-#define Pot2_GPIO_Port GPIOA
-#define Pot3_Pin GPIO_PIN_4
-#define Pot3_GPIO_Port GPIOC
 #define Button_Pin GPIO_PIN_0
 #define Button_GPIO_Port GPIOB
 #define R_LED_Pin GPIO_PIN_1

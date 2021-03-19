@@ -45,12 +45,10 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-DMA_HandleTypeDef hdma_adc1;
-
 SPI_HandleTypeDef hspi1;
-
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 
@@ -71,7 +69,6 @@ static void MX_SPI1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
-
 /* USER CODE BEGIN PFP */
 void displayResults(int measurement, int i, int val);
 void digitalPotWrite(int value);
@@ -101,6 +98,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	char uart_buf[50] = {'\0'};	//buffer for output data
 	int uart_buf_len = {'\0'};
+	char spi_buf[20];
 
   /* USER CODE END 1 */
 
@@ -112,7 +110,7 @@ int main(void)
   /* USER CODE BEGIN Init */
 	//byte address = 0x00;
 	int val = 0;  // variable to store the value read
-	int i = 128; //starting value of 540
+	int i = 64; //starting value of 540
 	int target = 256; //target analog bit value
 	int tNum = 1;
 
@@ -137,6 +135,7 @@ int main(void)
   //buffer holds the values until conversions are complete,
   //at which point the adc[] array holds the referenced values.
   HAL_ADC_Start_DMA (&hadc1, buffer, 6);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
   /*
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
@@ -191,36 +190,54 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1){
 	  for(int measurement = 0; measurement <= 10; measurement++){
-	  HAL_ADC_Start(&hadc1);								//Start ADC conversion
-	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);		//wait for ADC conversion
-	  val = HAL_ADC_GetValue(&hadc1);
-	  i = targetCheck(val, target, i);
-	  //dataString = createCSV(val,val,val,tNum);
-	  if (i > 128){
-	    i = 128;
-	  }
-	  if (i < 0){
-	    i = 0;
-	  }
+		  HAL_ADC_Start(&hadc1);								//Start ADC conversion
+		  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);		//wait for ADC conversion
+		  val = HAL_ADC_GetValue(&hadc1);
+		  int ADC_Check = HAL_ADC_GetValue(&hadc1);
 
-	  displayResults(measurement, i, val);
-	  digitalPotWrite(i);
-	  HAL_Delay(1000);
-	//strcpy((char*)buf, "Hello!\r\n");
-	//HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
-	//HAL_Delay(500);
+		  sprintf(uart_buf, "\r\nADC Reading is= %hu\r\n\n", ADC_Check);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t*)uart_buf, strlen(uart_buf), HAL_MAX_DELAY);		//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "\'val\'= %d\r\n", val);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "\'i\' Before Conversion = %d\r\n", i);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  i = targetCheck(val, target, i);
+
+		  uart_buf_len =sprintf(uart_buf, "\'i\' After Conversion = %d\r\n", i);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  //dataString = createCSV(val,val,val,tNum);
+		  if(i > 128){
+			  //uart_buf_len =sprintf(uart_buf, "Entered if Statement about 128\n");	  	//load print buffer with message
+			  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+			  i = 128;
+		  }
+		  if(i < 0){
+			  //uart_buf_len =sprintf(uart_buf, "Entered if Statement below 0\n");	  	//load print buffer with message
+			  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+			  i = 0;
+		  }
+
+		  displayResults(measurement, i, val);
+		  digitalPotWrite(i);
+		  HAL_Delay(1000);
+		//strcpy((char*)buf, "Hello!\r\n");
+		//HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
+		//HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-	  HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
-	  HAL_Delay(500);
-	  //Using DMA to scan ADC values. Array adc[] holds the values
-	  //from the 6 ADC inputs. sensor1=adc[0] sensor2=adc[1] etc.
-  }
+		  HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
+		  HAL_Delay(500);
+		  //Using DMA to scan ADC values. Array adc[] holds the values
+		  //from the 6 ADC inputs. sensor1=adc[0] sensor2=adc[1] etc.
+	  	  }
 	tNum++;
 	HAL_Delay(3000);
-}
+  	}
   /* USER CODE END 3 */
 }
 
@@ -366,7 +383,7 @@ static void MX_SPI1_Init(void)
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_7BIT;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
@@ -376,7 +393,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
@@ -467,9 +484,9 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
 
 }
 
@@ -527,7 +544,7 @@ static void MX_GPIO_Init(void)
 void displayResults(int measurement, int i, int val){
   char uart_buf[50] = {'\0'};	//buffer for output data
   int uart_buf_len = {'\0'};
-  float voltage = ((5.000/1024) * val);
+  float voltage = ((3.3/4096) * val);
   float potValue = (10000/128) * i;
 
   //sprintf(uart_buf, "Test # %d", measurement);	  			//load print buffer with message
@@ -539,97 +556,88 @@ void displayResults(int measurement, int i, int val){
   uart_buf_len =sprintf(uart_buf, "\r\tPotentiometer Bit Value: %d\n", i);	//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-  uart_buf_len =sprintf(uart_buf, "\r\tPotentiometer (Ohms): %g\n", potValue);	//load print buffer with message
+  uart_buf_len =sprintf(uart_buf, "\r\tPotentiometer (Ohms): %f\n", potValue);	//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
   uart_buf_len =sprintf(uart_buf, "\r\tOutput Bit Value: %d\n", val);	  		//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-  uart_buf_len =sprintf(uart_buf, "\r\tVoltage: %gV\n\n\r", voltage);	  			//load print buffer with message
+  uart_buf_len =sprintf(uart_buf, "\r\tVoltage: %fV\n\n\r", voltage);	  			//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
 }
-  //-------------------------------------------------------
-/*
-  uart_buf_len =sprintf(uart_buf, "Test # {measurement}\n");	  			//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\tPotentiometer Bit Value: {i}\n");	  	//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\tPotentiometer (Ohms): {potValue}\n");	//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\tOutput Bit Value: {val}\n");	  		//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\tVoltage: {voltage}V\n");	  			//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-*/
 
 int targetCheck(int val, int target, int i){
+	//char uart_buf[50] = {'\0'};	//buffer for output data
+	//int uart_buf_len = {'\0'};
+
+	//uart_buf_len =sprintf(uart_buf, "\r\'Val\' inside function = %d\r\n", val);	  	//load print buffer with message
+	//HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+	//uart_buf_len =sprintf(uart_buf, "\r\'Target\' inside function = %d\r\n", target);	  	//load print buffer with message
+	//HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
 	//check for distance val is from the target
 	//if the analog value is greater than 50% of the target value, decrease 'i' by 50
-	if (val > 1.50 * target){
-	  i = i - 50;
-	}
+	if (val > 1.50 * target)
+		i = i - 50;
 	//if the analog value is greater than 40% of the target value, decrease 'i' by 40
-	else if (val > 1.40 * target){
-	  i = i - 40;
-	}
+	else if (val > 1.40 * target)
+		i = i - 40;
 	//if the analog value is greater than 30% of the target value, decrease 'i' by 30
-	else if (val > 1.30 * target){
-	  i = i - 30;
-	}
+	else if (val > 1.30 * target)
+		i = i - 30;
 	//if the analog value is greater than 20% of the target value, decrease 'i' by 20
-	else if (val > 1.20 * target){
-	  i = i - 20;
-	}
+	else if (val > 1.20 * target)
+		i = i - 20;
 	//if the analog value is greater than 10% of the target value, decrease 'i' by 10
-	else if (val > 1.10 * target){
-	  i = i - 10;
-	}
+	else if (val > 1.10 * target)
+		i = i - 10;
 	//if the analog value is greater than 20% of the target value, decrease 'i' by 5
-	else if (val > 1.04 * target){
-	  i = i - 5;
-	}
+	else if (val > 1.04 * target)
+		i = i - 5;
 	//if the analog value is greater than 20% of the target value, decrease 'i' by 1
-	else if (val > target){
-	  i = i - 1;
-	}
+	else if (val > target)
+		i = i - 1;
 	//--------------------------------------------------------------------------------------------------------------
 	//if the analog value is greater than 20% of the target value, decrease 'i' by 50
 	else if (val < (1- 0.50) * target){
-	  i = i + 50;
+		i = i + 50;
 	}
 	else if (val < (1- 0.04) * target){
-	  i = i + 5;
+		i = i + 5;
 	}
 	//if the analog value is greater than 40% of the target value, decrease 'i' by 50
 	else if (val < (1- 0.10) * target){
-	  i = i + 10;
+		i = i + 10;
 	}
 	//if the analog value is greater than 30% of the target value, decrease 'i' by 50
 	else if (val < (1- 0.20) * target){
-	  i = i + 20;
+		i = i + 20;
 	}
 	//if the analog value is greater than 20% of the target value, decrease 'i' by 50
 	else if (val < (1- 0.30) * target){
-	  i = i + 30;
+		i = i + 30;
 	}
 	//if the analog value is greater than 10% of the target value, decrease 'i' by 50
 	else if (val < (1- 0.40) * target){
-	  i = i + 40;
+		i = i + 40;
 	}
 	else if (val < target){
-	  i = i + 1;
+		i = i + 1;
 	}
 	return i;
 }
 
 void digitalPotWrite(int value){
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin HIGH.
-	HAL_SPI_Transmit(&hspi1, (uint8_t *)&value, 2, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+	char uart_buf[50] = {'\0'};	//buffer for output data
+	int uart_buf_len = {'\0'};
+
+	//uart_buf_len =sprintf(uart_buf, "\rWriting %d to the ADC\r\n\n", value);	  	//load print buffer with message
+	//HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);				//print to terminal
+
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin LOW.
+	HAL_SPI_Transmit(&hspi1, (uint8_t *)&value, 1, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+	HAL_Delay(100);
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
 	HAL_Delay(100);
 	}
