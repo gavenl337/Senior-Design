@@ -93,6 +93,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	uint8_t buf[12];
+	char msg[20];
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -130,7 +132,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  strcpy((char*)buf, "Hello!\r\n");
+	  strcpy((char*)buf, "ADC Test!\r\n");
 	  HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
 	  HAL_Delay(500);
     /* USER CODE END WHILE */
@@ -138,37 +140,17 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 	  HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
-	  HAL_Delay(500);
-	  //Using DMA to scan ADC values seems to work just as well
-	  //as polling. I think we can get rid of the code below.
+	  HAL_Delay(100);
+	  //Using DMA to scan ADC values and transmit them to serial
 
-	  //code for reading from all ADC connections in order.
-	  //Should be fast enough for our purposes.
-	  //PollForConversion goes through each ADC to report changes.
-	  /*HAL_ADC_Start (&hadc1); //start the ADC
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  sensor1 = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  sensor2 = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  sensor3 = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  pot1in = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  pot2in = HAL_ADC_GetValue (&hadc1);
-
-	  	  HAL_ADC_PollForConversion (&hadc1, 100);
-	  	  pot3in = HAL_ADC_GetValue (&hadc1);
-
-	  HAL_ADC_Stop (&hadc1);
-
-	  HAL_Delay (100);
-	  */
+	  // Convert ADC values to string and print
+	  for (int i=0;i<6;i++)
+	  	  {
+		  sprintf(msg, "ADC#%u value: %lu\r\n", i, adc[i]);
+		  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+		  HAL_Delay (100);
+	  	  }
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
