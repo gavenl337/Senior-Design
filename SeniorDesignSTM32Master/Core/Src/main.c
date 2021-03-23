@@ -36,6 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define ADC_BUF_LEN 4096
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -45,19 +46,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
+
 SPI_HandleTypeDef hspi1;
+
 UART_HandleTypeDef huart2;
-UART_HandleTypeDef huart3;
-DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
-
-//const uint16_t NOP = 0b0000000000000000;			// no operation
-//const uint16_t WRITE_RDAC = 0b0000010000000000;		// Write contents of serial register data to RDAC to move wiper on Digipot. MUST be ORd with data
-//const uint16_t READ_RDAC = 0b0000100000000000; 		// Read contents from RDAC register
-//const uint16_t ENABLE_WRITE = 0b0001110000000010;	// Enable the writing of registers. Must be used after wakeup
-//const uint16_t SHUTOWN = 0b0010010000000001;		// Place digipot in shutdown mode
-//const uint16_t WAKEUP = 0b0010010000000000;			// Place digipot in Wakeup mode
+uint16_t adc_buf[ADC_BUF_LEN], adc[6]
+;
 
 /* USER CODE END PV */
 
@@ -65,28 +62,30 @@ DMA_HandleTypeDef hdma_usart2_tx;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
+static void MX_USART2_UART_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_USART2_UART_Init(void);
-static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void displayResults(int measurement, int i, int val);
 void digitalPotWrite(int value);
 int targetCheck(int val, int target, int i);
+void DMATransferComplete(DMA_HandleTypeDef *hdma);
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t adc[6], buffer[6], sensor1, sensor2, sensor3, pot1in, pot2in, pot3in;
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 	for (int i = 0; i<6; i++)
 		{
-			adc[i] = buffer[i];
+			adc[i] = adc_buf[i];
 		}
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -98,7 +97,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	char uart_buf[50] = {'\0'};	//buffer for output data
 	int uart_buf_len = {'\0'};
-	char spi_buf[20];
 
   /* USER CODE END 1 */
 
@@ -109,10 +107,18 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 	//byte address = 0x00;
-	int val = 0;  // variable to store the value read
+	int val1 = 0;  // variable to store the value read
+	int val2 = 0;  // variable to store the value read
+	int val3 = 0;  // variable to store the value read
+	int val4 = 0;  // variable to store the value read
+	int val5 = 0;  // variable to store the value read
+	int val6 = 0;  // variable to store the value read
+
 	int i = 64; //starting value of 540
 	int target = 256; //target analog bit value
 	int tNum = 1;
+	//int NOP = 0b00000000;
+	int NOP = 0;
 
   /* USER CODE END Init */
 
@@ -126,15 +132,15 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
+  MX_USART2_UART_Init();
   MX_SPI1_Init();
   MX_ADC1_Init();
-  MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   //DMA stores ADC values in memory to be called back when needed.
   //buffer holds the values until conversions are complete,
   //at which point the adc[] array holds the referenced values.
-  HAL_ADC_Start_DMA (&hadc1, buffer, 6);
+  //HAL_ADC_Start_DMA (&hadc1, buffer, 6);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
   /*
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
@@ -188,40 +194,71 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t spiData[1];
+  spiData[0] = 0x00;
   while (1){
+
 	  for(int measurement = 0; measurement <= 10; measurement++){
-		  HAL_ADC_Start(&hadc1);								//Start ADC conversion
-		  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);		//wait for ADC conversion
-		  val = HAL_ADC_GetValue(&hadc1);
-		  int ADC_Check = HAL_ADC_GetValue(&hadc1);
+		  //HAL_ADC_Start(&hadc1);								//Start ADC conversion
+		  //HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);		//wait for ADC conversion
+		  //val = HAL_ADC_GetValue(&hadc1);
+		  //HAL_ADC_Start(&hadc1);
+		  val1 = adc[0];
+		  val2 = adc[1];
+		  val3 = adc[2];
+		  val4 = adc[3];
+		  val5 = adc[4];
+		  val6 = adc[5];
 
-		  sprintf(uart_buf, "\r\nADC Reading is= %hu\r\n\n", ADC_Check);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t*)uart_buf, strlen(uart_buf), HAL_MAX_DELAY);		//print to terminal
-
-		  uart_buf_len =sprintf(uart_buf, "\'val\'= %d\r\n", val);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val1\'= %d\r\n", val1);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-		  uart_buf_len =sprintf(uart_buf, "\'i\' Before Conversion = %d\r\n", i);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val2\'= %d\r\n", val2);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-		  i = targetCheck(val, target, i);
 
-		  uart_buf_len =sprintf(uart_buf, "\'i\' After Conversion = %d\r\n", i);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val3\'= %d\r\n", val3);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "\'val4\'= %d\r\n", val4);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "\'val5\'= %d\r\n", val5);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "\'val6\'= %d\r\n", val6);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "\'i\' Before Conversion = %d\r\n", spiData[0]);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  spiData[0] = targetCheck(val1, target, spiData[0]);
+
+		  uart_buf_len =sprintf(uart_buf, "\'i\' After Conversion = %d\r\n", spiData[0]);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
 		  //dataString = createCSV(val,val,val,tNum);
-		  if(i > 128){
+		  if(spiData[0] > 128){
 			  //uart_buf_len =sprintf(uart_buf, "Entered if Statement about 128\n");	  	//load print buffer with message
 			  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 			  i = 128;
 		  }
-		  if(i < 0){
+		  if(spiData[0] < 0){
 			  //uart_buf_len =sprintf(uart_buf, "Entered if Statement below 0\n");	  	//load print buffer with message
 			  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-			  i = 0;
+			  spiData[0] = 0;
 		  }
 
-		  displayResults(measurement, i, val);
-		  digitalPotWrite(i);
+		  displayResults(measurement, spiData[0], val1);
+
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin LOW.
+		  HAL_Delay(100);
+		  HAL_SPI_Transmit(&hspi1, spiData, 1, 100); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+		  HAL_Delay(100);
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  HAL_Delay(100);
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+
+		  //digitalPotWrite(i);
 		  HAL_Delay(1000);
 		//strcpy((char*)buf, "Hello!\r\n");
 		//HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
@@ -258,7 +295,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 40;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -267,19 +310,17 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3
-                              |RCC_PERIPHCLK_ADC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
   PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
@@ -322,18 +363,18 @@ static void MX_ADC1_Init(void)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.Resolution = ADC_RESOLUTION_10B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.NbrOfConversion = 6;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
   hadc1.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
@@ -354,6 +395,41 @@ static void MX_ADC1_Init(void)
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Rank = ADC_REGULAR_RANK_6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -387,7 +463,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -440,41 +516,6 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
-  * @brief USART3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART3_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART3_Init 0 */
-
-  /* USER CODE END USART3_Init 0 */
-
-  /* USER CODE BEGIN USART3_Init 1 */
-
-  /* USER CODE END USART3_Init 1 */
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART3_Init 2 */
-
-  /* USER CODE END USART3_Init 2 */
-
-}
-
-/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -484,9 +525,9 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA1_Channel7_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 
@@ -505,23 +546,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, R_LED_Pin|G_LED_Pin|Heater_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Heater_GPIO_Port, Heater_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, CS3_Pin|CS2_Pin|CS1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : Button_Pin */
-  GPIO_InitStruct.Pin = Button_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Button_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : R_LED_Pin G_LED_Pin Heater_Pin */
-  GPIO_InitStruct.Pin = R_LED_Pin|G_LED_Pin|Heater_Pin;
+  /*Configure GPIO pin : Heater_Pin */
+  GPIO_InitStruct.Pin = Heater_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(Heater_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CS3_Pin CS2_Pin CS1_Pin */
   GPIO_InitStruct.Pin = CS3_Pin|CS2_Pin|CS1_Pin;
@@ -629,19 +664,32 @@ int targetCheck(int val, int target, int i){
 }
 
 void digitalPotWrite(int value){
-	char uart_buf[50] = {'\0'};	//buffer for output data
-	int uart_buf_len = {'\0'};
+	//char uart_buf[50] = {'\0'};	//buffer for output data
+	//int uart_buf_len = {'\0'};
 
 	//uart_buf_len =sprintf(uart_buf, "\rWriting %d to the ADC\r\n\n", value);	  	//load print buffer with message
 	//HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);				//print to terminal
 
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin LOW.
-	HAL_SPI_Transmit(&hspi1, (uint8_t *)&value, 1, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
-	HAL_Delay(100);
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
-	HAL_Delay(100);
+	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin LOW.
+	//HAL_SPI_Transmit(&hspi1, (uint8_t *)&value, 1, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+	//HAL_Delay(100);
+	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+	//HAL_Delay(100);
 	}
 
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc){
+	/*char uart_buf[50] = {'\0'};	//buffer for output data
+	int uart_buf_len = {'\0'};
+	uart_buf_len =sprintf(uart_buf, "\rFirt ADC Handle\r\n\n");	  	//load print buffer with message
+	HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);*/
+}
+
+/*void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+	char uart_buf[50] = {'\0'};	//buffer for output data
+	int uart_buf_len = {'\0'};
+	uart_buf_len =sprintf(uart_buf, "\rSecond ADC Handle\r\n\n");	  	//load print buffer with message
+	HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);
+}*/
 /* USER CODE END 4 */
 
 /**
@@ -650,6 +698,11 @@ void digitalPotWrite(int value){
   */
 void Error_Handler(void)
 {
+  /* USER CODE BEGIN Error_Handler_Debug */
+	  /* User can add his own implementation to report the HAL error return state */
+	  __disable_irq();
+	  while (1){
+	  }
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
 

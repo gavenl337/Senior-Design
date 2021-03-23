@@ -58,22 +58,20 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define Sensor1_Pin GPIO_PIN_0
-#define Sensor1_GPIO_Port GPIOC
-#define Sensor2_Pin GPIO_PIN_1
-#define Sensor2_GPIO_Port GPIOC
-#define Sensor3_Pin GPIO_PIN_2
-#define Sensor3_GPIO_Port GPIOC
-#define SPI1_ADC_Pin GPIO_PIN_0
-#define SPI1_ADC_GPIO_Port GPIOA
+#define Sensor_1_Pin GPIO_PIN_0
+#define Sensor_1_GPIO_Port GPIOC
+#define Sensor_2_Pin GPIO_PIN_1
+#define Sensor_2_GPIO_Port GPIOC
+#define Sensor_3_Pin GPIO_PIN_2
+#define Sensor_3_GPIO_Port GPIOC
+#define Pot_IN_1_Pin GPIO_PIN_3
+#define Pot_IN_1_GPIO_Port GPIOC
+#define Pot_IN_2_Pin GPIO_PIN_0
+#define Pot_IN_2_GPIO_Port GPIOA
+#define Pot_IN_3_Pin GPIO_PIN_1
+#define Pot_IN_3_GPIO_Port GPIOA
 #define SIM_TX_Pin GPIO_PIN_2
 #define SIM_TX_GPIO_Port GPIOA
-#define Button_Pin GPIO_PIN_0
-#define Button_GPIO_Port GPIOB
-#define R_LED_Pin GPIO_PIN_1
-#define R_LED_GPIO_Port GPIOB
-#define G_LED_Pin GPIO_PIN_2
-#define G_LED_GPIO_Port GPIOB
 #define Heater_Pin GPIO_PIN_10
 #define Heater_GPIO_Port GPIOB
 #define CS3_Pin GPIO_PIN_6
