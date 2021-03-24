@@ -124,6 +124,7 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
   /* USER CODE END 2 */
 
+  /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   uint8_t spiData[6];
 
@@ -135,31 +136,34 @@ int main(void)
   while (1){
 	  for(int measurement = 0; measurement <= 10; measurement++){
 
-		  uart_buf_len =sprintf(uart_buf, "\'val 1\'= %d\r\n", adc[0]);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val 1\'= %ld\r\n", adc[0]);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-		  uart_buf_len =sprintf(uart_buf, "\'val 2\'= %d\r\n", adc[1]);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val 2\'= %ld\r\n", adc[1]);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-		  uart_buf_len =sprintf(uart_buf, "\'val 3\'= %d\r\n", adc[2]);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val 3\'= %ld\r\n", adc[2]);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-		  uart_buf_len =sprintf(uart_buf, "\'val 4\'= %d\r\n", adc[3]);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val 4\'= %ld\r\n", adc[3]);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-		  uart_buf_len =sprintf(uart_buf, "\'val 5\'= %d\r\n", adc[4]);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val 5\'= %ld\r\n", adc[4]);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
-		  uart_buf_len =sprintf(uart_buf, "\'val 6\'= %d\r\n\n", adc[5]);	  	//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "\'val 6\'= %ld\r\n\n", adc[5]);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
 		  //uart_buf_len =sprintf(uart_buf, "\'spiData\' Before Conversion = %d\r\n", spiData[0]);	  	//load print buffer with message
 		  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
+
+		  spiData[0] = targetCheck(adc[0], target, spiData[0]);
+		  int SPI_Transmit_Data =  0x00 | spiData[0];
 		  //iterate through SPI array and load with values
-		  for(int i = 0; i < 6; i++){
-			  spiData[i] = targetCheck(adc[i], target, spiData[i]);
-		  }
+		  //for(int i = 0; i < 6; i++){
+			  //spiData[i] = targetCheck(adc[i], target, spiData[i]);
+		  //}
 
 		  //uart_buf_len =sprintf(uart_buf, "\'spiData\' After Conversion = %d\r\n", spiData[0]);	  	//load print buffer with message
 		  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
@@ -172,9 +176,9 @@ int main(void)
 		  }
 
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin LOW.
-		  HAL_Delay(100);
-		  HAL_SPI_Transmit(&hspi1, spiData, 1, 100); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
-		  HAL_Delay(100);
+		  //HAL_Delay(1);
+		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data, 1, 0); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+		  //HAL_Delay(1);
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
 
 		  //digitalPotWrite(i);
@@ -383,11 +387,11 @@ static void MX_SPI1_Init(void)
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
