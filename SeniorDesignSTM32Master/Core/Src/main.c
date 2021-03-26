@@ -89,6 +89,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	char uart_buf[50] = {'\0'};	//buffer for output data
 	int uart_buf_len = {'\0'};
+	uint8_t spi_buf[0];
 
   /* USER CODE END 1 */
 
@@ -159,7 +160,8 @@ int main(void)
 
 
 		  spiData[0] = targetCheck(adc[0], target, spiData[0]);
-		  int SPI_Transmit_Data =  0x00 | spiData[0];
+		  //int SPI_Transmit_Data =  0x00 | spiData[0];
+		  int SPI_Transmit_Data = 0x00 | spiData[0];
 		  //iterate through SPI array and load with values
 		  //for(int i = 0; i < 6; i++){
 			  //spiData[i] = targetCheck(adc[i], target, spiData[i]);
@@ -177,7 +179,9 @@ int main(void)
 
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin LOW.
 		  //HAL_Delay(1);
-		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data, 1, 0); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+		  //HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)&SPI_Transmit_Data, (uint8_t)& spi_buf[0], 1, 100);
+		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
 		  //HAL_Delay(1);
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
 
@@ -243,7 +247,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC;
-  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_SYSCLK;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
   PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
@@ -391,7 +395,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -539,7 +543,7 @@ int targetCheck(int val, int target, int i){
 
 	//check for distance val is from the target
 	//if the analog value is greater than 50% of the target value, decrease 'i' by 50
-		if (val > 1.50 * target)
+		/*if (val > 1.50 * target)
 			i = i - 50;
 		//if the analog value is greater than 40% of the target value, decrease 'i' by 40
 		else if (val > 1.40 * target)
@@ -547,14 +551,15 @@ int targetCheck(int val, int target, int i){
 		//if the analog value is greater than 30% of the target value, decrease 'i' by 30
 		else if (val > 1.30 * target)
 			i = i - 30;
+			*/
 		//if the analog value is greater than 20% of the target value, decrease 'i' by 20
-		else if (val > 1.20 * target)
+		if (val > 1.20 * target)
 			i = i - 20;
 		//if the analog value is greater than 10% of the target value, decrease 'i' by 10
 		else if (val > 1.10 * target)
 			i = i - 10;
 		//if the analog value is greater than 20% of the target value, decrease 'i' by 5
-		else if (val > 1.04 * target)
+		if (val > 1.04 * target)
 			i = i - 5;
 		//if the analog value is greater than 20% of the target value, decrease 'i' by 1
 		else if (val > target)
