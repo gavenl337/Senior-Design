@@ -180,7 +180,7 @@ int main(void)
 		  for(int i = 0; i < 2; i++){											//iterate through SPI array and print results to terminal
 			  displayResults(i+1, spiData[i], adc[i]);
 		  }
-		  HAL_Delay(1000);
+		  HAL_Delay(1500);
 
 	  }
 
@@ -188,10 +188,15 @@ int main(void)
 	  for(int measurement = 0; measurement < 10; measurement++){
 		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  		//load print buffer with message
 		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
-		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\r \n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  	//load print buffer with message
+
+		  uart_buf_len =sprintf(uart_buf, "Potentiometer 1 Value (0 - 128): %d \
+				  	  	  	  	  	  	   \n\rPotentiometer 2 Value (0 - 128): %d", SPI_Transmit_Data_1, SPI_Transmit_Data_2);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "\n\rSent To Boron --> \"Unit %d, %d, %d, %s, %d\"\r\n\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  	//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 		  readingNumber++;
-	  	  HAL_Delay(1000);
+	  	  HAL_Delay(1500);
 	  }
 	  readingNumber = 0;
 	  deviceID_Number++;
