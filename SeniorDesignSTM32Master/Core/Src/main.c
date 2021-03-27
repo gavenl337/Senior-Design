@@ -50,6 +50,7 @@ DMA_HandleTypeDef hdma_adc1;
 
 SPI_HandleTypeDef hspi1;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -64,6 +65,7 @@ static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void displayResults(int ADC_number, int i, int val);
 void digitalPotWrite(int value);
@@ -87,9 +89,9 @@ uint32_t adc_buf[ADC_BUF_LEN], adc[6];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	char uart_buf[50] = {'\0'};	//buffer for output data
+	char uart_buf[127] = {'\0'};	//buffer for output data
 	int uart_buf_len = {'\0'};
-	uint8_t spi_buf[0];
+
 
   /* USER CODE END 1 */
 
@@ -99,12 +101,16 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-	//byte address = 0x00;
-
-	//int i = 64; //starting value of 540
 	int target = 1024; //target analog bit value from the ADC
-	int tNum = 1;
-	//int NOP = 0b00000000;
+	uint8_t spiData[6];
+	for(int j = 0; j < 6; j++){spiData[j] = 0x00;}
+	int SPI_Transmit_Data_1;
+	int SPI_Transmit_Data_2;
+	int SPI_Transmit_Data_3;
+	char deviceID[20] = "Unit One";
+	char readingType[20] = "Ambient";
+	int readingNumber = 0;
+	int deviceID_Number = 1;
 
   /* USER CODE END Init */
 
@@ -121,89 +127,84 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   MX_ADC1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);	//set CS3 pin HIGH.
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t spiData[6];
-
-  for(int j = 0; j < 6; j++){
-	  spiData[j] = 0x00;
-  }
-
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   while (1){
-	  for(int measurement = 0; measurement <= 10; measurement++){
+	  for(int measurement = 0; measurement < 10; measurement++){
 
-		  uart_buf_len =sprintf(uart_buf, "\'val 1\'= %ld\r\n", adc[0]);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-		  uart_buf_len =sprintf(uart_buf, "\'val 2\'= %ld\r\n", adc[1]);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-		  uart_buf_len =sprintf(uart_buf, "\'val 3\'= %ld\r\n", adc[2]);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-		  uart_buf_len =sprintf(uart_buf, "\'val 4\'= %ld\r\n", adc[3]);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-		  uart_buf_len =sprintf(uart_buf, "\'val 5\'= %ld\r\n", adc[4]);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-		  uart_buf_len =sprintf(uart_buf, "\'val 6\'= %ld\r\n\n", adc[5]);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-		  //uart_buf_len =sprintf(uart_buf, "\'spiData\' Before Conversion = %d\r\n", spiData[0]);	  	//load print buffer with message
-		  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
+		  //------------------------------Read SPI Data------------------------------//
 
 		  spiData[0] = targetCheck(adc[0], target, spiData[0]);
-		  //int SPI_Transmit_Data =  0x00 | spiData[0];
-		  int SPI_Transmit_Data = 0x00 | spiData[0];
-		  //iterate through SPI array and load with values
-		  //for(int i = 0; i < 6; i++){
-			  //spiData[i] = targetCheck(adc[i], target, spiData[i]);
-		  //}
+		  spiData[1] = targetCheck(adc[1], target, spiData[1]);
+		  spiData[2] = targetCheck(adc[2], target, spiData[2]);
+		  SPI_Transmit_Data_1 = 0x00 | spiData[0];
+		  SPI_Transmit_Data_2 = 0x00 | spiData[1];
+		  SPI_Transmit_Data_3 = 0x00 | spiData[2];
 
-		  //uart_buf_len =sprintf(uart_buf, "\'spiData\' After Conversion = %d\r\n", spiData[0]);	  	//load print buffer with message
-		  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  //------------------------------Transmit SPI Data to 3 Digital Potentiometers------------------------------//
 
-		  uart_buf_len =sprintf(uart_buf, "Test #%d\n", measurement);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-		  //iterate through SPI array and print results to terminal
-		  for(int i = 0; i < 6; i++){
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);				//set CS1 pin LOW.
+		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_1, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
+		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);				//set CS1 pin HIGH.
+		  HAL_Delay(100);
+
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);				//set CS2 pin LOW.
+		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_2, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
+		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);				//set CS2 pin HIGH.
+
+		  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);				//set CS3 pin LOW.
+		  //HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_3, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
+		  //while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+		  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);				//set CS3 pin HIGH.
+
+		  //------------------------------Send USART Data to Particle Boron Board------------------------------//
+
+		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  		//load print buffer with message
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  readingNumber++;
+
+		  //------------------------------Display Results to Terminal------------------------------//
+
+		  uart_buf_len =sprintf(uart_buf, "Test #%d\n", measurement);	  		//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  for(int i = 0; i < 2; i++){											//iterate through SPI array and print results to terminal
 			  displayResults(i+1, spiData[i], adc[i]);
 		  }
-
-		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin LOW.
-		  //HAL_Delay(1);
-		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
-		  //HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)&SPI_Transmit_Data, (uint8_t)& spi_buf[0], 1, 100);
-		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-		  //HAL_Delay(1);
-		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
-
-		  //digitalPotWrite(i);
 		  HAL_Delay(1000);
-		//strcpy((char*)buf, "Hello!\r\n");
-		//HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
-		//HAL_Delay(500);
+
+	  }
+
+	  char readingType[20] = "Breath";
+	  for(int measurement = 0; measurement < 10; measurement++){
+		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  		//load print buffer with message
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  readingNumber++;
+	  	  HAL_Delay(1000);
+	  }
+	  readingNumber = 0;
+	  deviceID_Number++;
+
+
+
+	  HAL_Delay(1500);
+  }
+}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-		  HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
-		  HAL_Delay(500);
-		  //Using DMA to scan ADC values. Array adc[] holds the values
-		  //from the 6 ADC inputs. sensor1=adc[0] sensor2=adc[1] etc.
-	  	  }
-	tNum++;
-	HAL_Delay(3000);
-  	}
   /* USER CODE END 3 */
-}
+
 
 /**
   * @brief System Clock Configuration
@@ -246,7 +247,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
+                              |RCC_PERIPHCLK_ADC;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_SYSCLK;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
@@ -413,6 +416,41 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -509,29 +547,17 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void displayResults(int ADC_number, int i, int val){
-  char uart_buf[50] = {'\0'};	//buffer for output data
+  char uart_buf[350] = {'\0'};	//buffer for output data
   int uart_buf_len = {'\0'};
   float voltage = (3.3/4096) * val;
   float potValue = (10000/128) * i;
 
-  //sprintf(uart_buf, "Test # %d", measurement);	  			//load print buffer with message
-  //HAL_UART_Transmit(&huart2, (uint8_t *)MSG, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\tADC: #%d\n", ADC_number);	  	//load print buffer with message
+  uart_buf_len =sprintf(uart_buf, "\tADC: #%d\n \
+		  	  	  	  	  	  	  \r\t\tPotentiometer Value (0 - 128): %d\n \
+		  	  	  	  	  	  	  \r\t\tResistance: .................. %.0f Ohms\n \
+		  	  	  	  	  	  	  \r\t\tADC Value (0 - 4096): ........ %d\n \
+		  	  	  	  	  	  	  \r\t\tADC Voltage: ................. %.2fV\n\n\r", ADC_number, i, potValue, val, voltage);	  	//load print buffer with message
   HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\r\t\tPotentiometer Value (0 - 128): %d\n", i);	//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\r\t\tResistance: .................. %.0f Ohms\n", potValue);	//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\r\t\tADC Value (0 - 4096): ........ %d\n", val);	  		//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-  uart_buf_len =sprintf(uart_buf, "\r\t\tADC Voltage: ................. %.2fV\n\n\r", voltage);	  			//load print buffer with message
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
 }
 
 int targetCheck(int val, int target, int i){
