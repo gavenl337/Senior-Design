@@ -188,6 +188,8 @@ int main(void)
 	  for(int measurement = 0; measurement < 10; measurement++){
 		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  		//load print buffer with message
 		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\r \n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 		  readingNumber++;
 	  	  HAL_Delay(1000);
 	  }
