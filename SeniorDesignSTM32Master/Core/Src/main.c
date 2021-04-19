@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,6 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define ADC_BUF_LEN 6
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,9 +53,11 @@ DMA_HandleTypeDef hdma_adc1;
 
 SPI_HandleTypeDef hspi1;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
 
 /* USER CODE END PV */
 
@@ -61,17 +65,23 @@ UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
-static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_SPI1_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+void displayResults(int ADC_number, int i, int val);
+void digitalPotWrite(int value);
+int targetCheck(int val, int target, int i);
+void DMATransferComplete(DMA_HandleTypeDef *hdma);
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t adc[6], buffer[6], sensor1, sensor2, sensor3, pot1in, pot2in, pot3in;
-
+uint32_t adc_buf[ADC_BUF_LEN], adc[6];
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
@@ -80,6 +90,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 			adc[i] = buffer[i];
 		}
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -89,7 +100,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t buf[12];
+	char uart_buf[127] = {'\0'};	//buffer for output data
+	int uart_buf_len = {'\0'};
+
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -98,6 +112,16 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+	int target = 1024; //target analog bit value from the ADC
+	uint8_t spiData[6];
+	for(int j = 0; j < 6; j++){spiData[j] = 0x00;}
+	int SPI_Transmit_Data_1;
+	int SPI_Transmit_Data_2;
+	int SPI_Transmit_Data_3;
+	char deviceID[20] = "Unit One";
+	char readingType[20] = "Ambient";
+	int readingNumber = 0;
+	int deviceID_Number = 1;
 
   //define sensor warming time
   #define SENS_WARMING_TIME 300 //approx. 5 minutes
@@ -146,181 +170,133 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_SPI1_Init();
   MX_USART2_UART_Init();
+  MX_SPI1_Init();
   MX_ADC1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  //DMA stores ADC values in memory to be called back when needed.
-  //buffer holds the values until conversions are complete,
-  //at which point the adc[] array holds the referenced values.
-  HAL_ADC_Start_DMA (&hadc1, buffer, 6);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);	//set CS3 pin HIGH.
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	strcpy((char*)buf, "Hello!\r\n");
-	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
-	HAL_Delay(500);
 
-	bool abortLogging = false; // I ADDED THINGS HERE !!!!!!!!
-	float airreading_S1, airreading_S2, airreading_S3, airreading_S4; // I ADDED THINGS HERE !!!!!!!!
-	time(&t);
+  while (1){
+	  	//Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
+		for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+		  HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+		  HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+		}
 
+		//code to power up sensors here
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
 
-	//if (gsmAccess.status() != GSM_READY || gprs.status() != GPRS_READY || !gsmClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
-	 //   connectGSM(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
-	 // }
+		//Fast blinking - Blinking red light 1 times per second for 5 minute/s indicating sensor warming up
+		 for (int i = 0; i < SENS_WARMING_TIME; i++) {
+			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+			 HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+			 HAL_Delay(875); // I ADDED THINGS HERE !!!!!!!!
+		 }
 
-	 // if (!mqttClient.connected()) { // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
-	    // MQTT client is disconnected, connect
-	//    connectMQTT(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
-	//  }
+		 //Fast Blinking (four times a second) Yellow for 5 sec warnning begining of data collection via MQTT
+		   for (int i = 0; i < 20; i++) {
+			   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+		   }
 
-	  // poll for new MQTT messages and send keep alives
-	//  mqttClient.poll(); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+	  for(int measurement = 0; measurement < 10; measurement++){
 
-	  //Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
-	    for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
-	      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
-	      HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
-	      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
-	      HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
-	    }
+		  //------------------------------Read SPI Data------------------------------//
 
-	    //code to power up sensors here
-	    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+		  spiData[0] = targetCheck(adc[0], target, spiData[0]);
+		  spiData[1] = targetCheck(adc[1], target, spiData[1]);
+		  spiData[2] = targetCheck(adc[2], target, spiData[2]);
+		  SPI_Transmit_Data_1 = 0x00 | spiData[0];
+		  SPI_Transmit_Data_2 = 0x00 | spiData[1];
+		  SPI_Transmit_Data_3 = 0x00 | spiData[2];
 
-	    //Fast blinking - Blinking red light 1 times per second for 5 minute/s indicating sensor warming up
-	     for (int i = 0; i < SENS_WARMING_TIME; i++) {
-	    	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
-	    	 HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
-	    	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
-	    	 HAL_Delay(875); // I ADDED THINGS HERE !!!!!!!!
-	     }
+		  //------------------------------Transmit SPI Data to 3 Digital Potentiometers------------------------------//
 
-	     //Fast Blinking (four times a second) Yellow for 5 sec warnning begining of data collection via MQTT
-	       for (int i = 0; i < 20; i++) {
-	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
-	    	   HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
-	       }
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);				//set CS1 pin LOW.
+		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_1, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
+		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);				//set CS1 pin HIGH.
+		  HAL_Delay(100);
 
-	       //Logging Data
-	        //Collect 10 samples of ambint data
-	        //Read the Sensors
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);				//set CS2 pin LOW.
+		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_2, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
+		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);				//set CS2 pin HIGH.
 
-	       for (int i = 0; i < 19; i++) {
-	          airreading_S1 = adc[0]; //reads the 2620 sensor input for air
-	          airreading_S2 = adc[1]; //reads the 2602 sensor input for air
-	          airreading_S3 = adc[2]; //reads the 2612 sensor input for air
-	          //save data to each respective array
-	          sensor1ValuesA[i] = airreading_S1;
-	          sensor2ValuesA[i] = airreading_S2;
-	          sensor3ValuesA[i] = airreading_S3;
-	          HAL_Delay(100);//Wait before next reading
-	        }
+		  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);				//set CS3 pin LOW.
+		  //HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_3, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
+		  //while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+		  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);				//set CS3 pin HIGH.
 
-	       //Package Values into JSON for MQTT->DynamoDB
-	         valuePayload = "{\"timeStamp\":"; // I ADDED THINGS HERE !!!!!!!!
-	         char *timeStr = ctime(&t);
-	         char *nl = strrchr(timeStr,"\n");
-	         strcat(&valuePayload, timeStr); // gives date time
-	         strcat(&valuePayload, ",\"S1A\":["); // I ADDED THINGS HERE !!!!!!!!
-	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, sprintf(str, "%ld", sensor1ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
-	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
-	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
-	         }
-	         strcat(&valuePayload, ("],\"S2A\":[")); // I ADDED THINGS HERE !!!!!!!!
-	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, sprintf(str, "%ld", sensor2ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
-	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
-	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
-	         }
-	         strcat(&valuePayload, ("],\"S3A\":[")); // I ADDED THINGS HERE !!!!!!!!
-	         for (int i = 0; i < 19; i++) { // I ADDED THINGS HERE !!!!!!!!
-	           strcat(&valuePayload, sprintf(str, "%ld", sensor3ValuesA[i])); // I ADDED THINGS HERE !!!!!!!!
-	           if (i < 18) // I ADDED THINGS HERE !!!!!!!!
-	           {strcat(&valuePayload, (","));} // I ADDED THINGS HERE !!!!!!!!
-	         }
-	         strcat(&valuePayload, ("], ")); // I ADDED THINGS HERE !!!!!!!!
+		  //------------------------------Send USART Data to Particle Boron Board------------------------------//
 
-	         //shows a red,yellow,green "get ready" sequence
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Red LED on
-	         HAL_Delay(3000);
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Green LED on
-	         HAL_Delay(3000);
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!! Red LED off
-	           //FOR USER: BREATHE INTO THE SENSOR
+		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  		//load print buffer with message
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  readingNumber++;
 
-	         //Read the Sensors for 7 seconds
-	           for (int i = 0; i < 19; i++) {
-	             airreading_S1 = adc[0]; //reads the 2620 sensor input for air
-	             airreading_S2 = adc[1]; //reads the 2602 sensor input for air
-	             airreading_S3 = adc[2]; //reads the 2612 sensor input for air
-	             //save data to each respective array
-	                sensor1ValuesB[i] = airreading_S1;
-	                sensor2ValuesB[i] = airreading_S2;
-	                sensor3ValuesB[i] = airreading_S3;
-	                HAL_Delay(100);//Wait before next reading
-	              }
+		  //------------------------------Display Results to Terminal------------------------------//
 
-	           //Package Values into JSON for MQTT->DynamoDB
-	            strcat(&valuePayload, ("\"S1B\" : ["));
-	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, sprintf(str, "%ld", sensor1ValuesB[i]));
-	              if (i < 18)
-	              {strcat(&valuePayload, (","));}
-	            }
-	            strcat(&valuePayload, ("], \"S2B\" : ["));
-	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, sprintf(str, "%ld", sensor2ValuesB[i]));
-	              if (i < 18)
-	              {strcat(&valuePayload, (","));}
-	            }
-	            strcat(&valuePayload, ("], \"S3B\" : ["));
-	            for (int i = 0; i < 19; i++) {
-	              strcat(&valuePayload, sprintf(str, "%ld", sensor3ValuesB[i]));
-	              if (i < 18)
-	              {strcat(&valuePayload, (","));}
-	            }
-	            strcat(&valuePayload, ("]} "));
+		  uart_buf_len =sprintf(uart_buf, "Test #%d\n", measurement);	  		//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  for(int i = 0; i < 2; i++){											//iterate through SPI array and print results to terminal
+			  displayResults(i+1, spiData[i], adc[i]);
+		  }
+		  HAL_Delay(1500);
 
-	             // Serial.println(valuePayload);
-	             // publishMessage(valuePayload);
-	              HAL_Delay(500);
+	  }
 
-	            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // mosfet pin low (stops current flow to heater pins)
-	            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // Green LED off
+	  char readingType[20] = "Breath";
+	  for(int measurement = 0; measurement < 10; measurement++){
+		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  		//load print buffer with message
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
 
+		  uart_buf_len =sprintf(uart_buf, "Potentiometer 1 Value (0 - 128): %d \
+				  	  	  	  	  	  	   \n\rPotentiometer 2 Value (0 - 128): %d", SPI_Transmit_Data_1, SPI_Transmit_Data_2);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
+		  uart_buf_len =sprintf(uart_buf, "\n\rSent To Boron --> \"Unit %d, %d, %d, %s, %d\"\r\n\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  readingNumber++;
+	  	  HAL_Delay(1500);
+	  }
+	  readingNumber = 0;
+	  deviceID_Number++;
 
+	  //shows a red,yellow,green "get ready" sequence
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Red LED on
+	  HAL_Delay(3000);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Green LED on
+	  HAL_Delay(3000);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!! Red LED off
+      //FOR USER: BREATHE INTO THE SENSOR
 
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // mosfet pin low (stops current flow to heater pins)
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // Green LED off
 
-
-
-
-
-
-
-
-
+	  HAL_Delay(1500);
+  }
+}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-	  HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
-	  HAL_Delay(500);
-	  //Using DMA to scan ADC values. Array adc[] holds the values
-	  //from the 6 ADC inputs. sensor1=adc[0] sensor2=adc[1] etc.
-  }
   /* USER CODE END 3 */
-}
+
 
 /**
   * @brief System Clock Configuration
@@ -339,7 +315,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 40;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -348,17 +330,19 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC;
-  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
+                              |RCC_PERIPHCLK_ADC;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
+  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_SYSCLK;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
   PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
@@ -400,18 +384,18 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.NbrOfConversion = 6;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -433,6 +417,46 @@ static void MX_ADC1_Init(void)
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -462,17 +486,17 @@ static void MX_SPI1_Init(void)
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
@@ -480,6 +504,41 @@ static void MX_SPI1_Init(void)
   /* USER CODE BEGIN SPI1_Init 2 */
 
   /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -502,7 +561,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_EVEN;
+  huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
@@ -549,20 +608,24 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, R_LED_Pin|G_LED_Pin|Heater_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Heater_GPIO_Port, Heater_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : Button_Pin */
-  GPIO_InitStruct.Pin = Button_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Button_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, CS3_Pin|CS2_Pin|CS1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : R_LED_Pin G_LED_Pin Heater_Pin */
-  GPIO_InitStruct.Pin = R_LED_Pin|G_LED_Pin|Heater_Pin;
+  /*Configure GPIO pin : Heater_Pin */
+  GPIO_InitStruct.Pin = Heater_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(Heater_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : CS3_Pin CS2_Pin CS1_Pin */
+  GPIO_InitStruct.Pin = CS3_Pin|CS2_Pin|CS1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Dip5_Pin Dip4_Pin Dip3_Pin Dip2_Pin
                            Dip1_Pin */
@@ -575,7 +638,133 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void displayResults(int ADC_number, int i, int val){
+  char uart_buf[350] = {'\0'};	//buffer for output data
+  int uart_buf_len = {'\0'};
+  float voltage = (3.3/4096) * val;
+  float potValue = (10000/128) * i;
 
+  uart_buf_len =sprintf(uart_buf, "\tADC: #%d\n \
+		  	  	  	  	  	  	  \r\t\tPotentiometer Value (0 - 128): %d\n \
+		  	  	  	  	  	  	  \r\t\tResistance: .................. %.0f Ohms\n \
+		  	  	  	  	  	  	  \r\t\tADC Value (0 - 4096): ........ %d\n \
+		  	  	  	  	  	  	  \r\t\tADC Voltage: ................. %.2fV\n\n\r", ADC_number, i, potValue, val, voltage);	  	//load print buffer with message
+  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+}
+
+int targetCheck(int val, int target, int i){
+	//char uart_buf[50] = {'\0'};	//buffer for output data
+	//int uart_buf_len = {'\0'};
+
+	//uart_buf_len =sprintf(uart_buf, "\rpotentiometer bit value inside function = %d\r\n", i);	  	//load print buffer with message
+	//HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+	//check for distance val is from the target
+	//if the analog value is greater than 50% of the target value, decrease 'i' by 50
+		/*if (val > 1.50 * target)
+			i = i - 50;
+		//if the analog value is greater than 40% of the target value, decrease 'i' by 40
+		else if (val > 1.40 * target)
+			i = i - 40;
+		//if the analog value is greater than 30% of the target value, decrease 'i' by 30
+		else if (val > 1.30 * target)
+			i = i - 30;
+			*/
+		//if the analog value is greater than 20% of the target value, decrease 'i' by 20
+		if (val > 1.20 * target)
+			i = i - 20;
+		//if the analog value is greater than 10% of the target value, decrease 'i' by 10
+		else if (val > 1.10 * target)
+			i = i - 10;
+		//if the analog value is greater than 20% of the target value, decrease 'i' by 5
+		if (val > 1.04 * target)
+			i = i - 5;
+		//if the analog value is greater than 20% of the target value, decrease 'i' by 1
+		else if (val > target)
+			i = i - 1;
+		//--------------------------------------------------------------------------------------------------------------
+		//if the analog value is greater than 20% of the target value, decrease 'i' by 50
+		else if (val < (1- 0.50) * target){
+			i = i + 50;
+		}
+		else if (val < (1- 0.04) * target){
+			i = i + 5;
+		}
+		//if the analog value is greater than 40% of the target value, decrease 'i' by 50
+		else if (val < (1- 0.10) * target){
+			i = i + 10;
+		}
+		//if the analog value is greater than 30% of the target value, decrease 'i' by 50
+		else if (val < (1- 0.20) * target){
+			i = i + 20;
+		}
+		//if the analog value is greater than 20% of the target value, decrease 'i' by 50
+		else if (val < (1- 0.30) * target){
+			i = i + 30;
+		}
+		//if the analog value is greater than 10% of the target value, decrease 'i' by 50
+		else if (val < (1- 0.40) * target){
+			i = i + 40;
+		}
+		else if (val < target){
+			i = i + 1;
+		}
+		else
+			i = i;
+
+	//dataString = createCSV(val,val,val,tNum);
+	if(i > 128){
+	  //uart_buf_len =sprintf(uart_buf, "Entered if Statement about 128\n");	  	//load print buffer with message
+	  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+	  i = 128;
+	}
+	if(i < 0){
+	  //uart_buf_len =sprintf(uart_buf, "Entered if Statement below 0\n");	  	//load print buffer with message
+	  //HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+	  i = 0;
+	}
+	//uart_buf_len =sprintf(uart_buf, "\rpot value being returned after algorithm = %d\r\n", i);	  	//load print buffer with message
+	//HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+	return i;
+}
+
+void digitalPotWrite(int value){
+	//char uart_buf[50] = {'\0'};	//buffer for output data
+	//int uart_buf_len = {'\0'};
+
+	//uart_buf_len =sprintf(uart_buf, "\rWriting %d to the ADC\r\n\n", value);	  	//load print buffer with message
+	//HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);				//print to terminal
+
+	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);	//set CS1 pin LOW.
+	//HAL_SPI_Transmit(&hspi1, (uint8_t *)&value, 1, 400); //handle SPI, Cast data to a 16 bit unsigned integer, 2 bytes of data, 400 ms delay
+	//HAL_Delay(100);
+	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
+	//HAL_Delay(100);
+	}
+
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc){
+	/*char uart_buf[50] = {'\0'};	//buffer for output data
+	int uart_buf_len = {'\0'};
+	uart_buf_len =sprintf(uart_buf, "\rFirt ADC Handle\r\n\n");	  	//load print buffer with message
+	HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);*/
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+	adc[0] = adc_buf[0];
+	adc[1] = adc_buf[1];
+	adc[2] = adc_buf[2];
+	adc[3] = adc_buf[3];
+	adc[4] = adc_buf[4];
+	adc[5] = adc_buf[5];
+}
+
+/*void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+	char uart_buf[50] = {'\0'};	//buffer for output data
+	int uart_buf_len = {'\0'};
+	uart_buf_len =sprintf(uart_buf, "\rSecond ADC Handle\r\n\n");	  	//load print buffer with message
+	HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);
+}*/
 /* USER CODE END 4 */
 
 /**
@@ -584,6 +773,11 @@ static void MX_GPIO_Init(void)
   */
 void Error_Handler(void)
 {
+  /* USER CODE BEGIN Error_Handler_Debug */
+	  /* User can add his own implementation to report the HAL error return state */
+	  __disable_irq();
+	  while (1){
+	  }
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
 
