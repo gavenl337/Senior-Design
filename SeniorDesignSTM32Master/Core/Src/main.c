@@ -25,6 +25,9 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h> // I ADDED THINGS HERE !!!!!!!!
+#include <stdlib.h>
+#include <time.h>
 
 
 /* USER CODE END Includes */
@@ -80,6 +83,14 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc);
 /* USER CODE BEGIN 0 */
 uint32_t adc_buf[ADC_BUF_LEN], adc[6];
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+	for (int i = 0; i<6; i++)
+		{
+			adc[i] = buffer[i];
+		}
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -112,12 +123,47 @@ int main(void)
 	int readingNumber = 0;
 	int deviceID_Number = 1;
 
+  //define sensor warming time
+  #define SENS_WARMING_TIME 300 //approx. 5 minutes
+
+  unsigned long lastMillis = 0; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor1ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor2ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor3ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor1ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor2ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+  int long sensor3ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+
+  char *valuePayload; // I ADDED THINGS HERE !!!!!!!!
+  char str[80]; // how long does MQTT need to be?
+  time_t t;
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+
+  //LowPower Sleep mode button-interrupt connection
+  // LowPower.attachInterruptWakeup(BUTTON_PIN, wakeUp, CHANGE); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+
+   //GSM Setup
+  // Serial.begin(115200); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+   //while (!Serial);
+ //}
+
+   // Optional, set the client id used for MQTT,
+   // each device that is connected to the broker
+   // must have a unique client id. The MQTTClient will generate
+   // a client id for you based on the millis() value if not set
+   //
+  // mqttClient.setId("ISLGSM001"); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+
+   // Set the message callback, this function is
+   // called when the MQTTClient receives a message
+  // mqttClient.onMessage(onMessageReceived); // I ADDED THINGS HERE !!!!!!!! NEEDS TO BE CHANGED
+ //}
 
   /* USER CODE END SysInit */
 
@@ -137,7 +183,37 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1){
+	  	//Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
+		for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+		  HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+		  HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+		}
+
+		//code to power up sensors here
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+
+		//Fast blinking - Blinking red light 1 times per second for 5 minute/s indicating sensor warming up
+		 for (int i = 0; i < SENS_WARMING_TIME; i++) {
+			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+			 HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+			 HAL_Delay(875); // I ADDED THINGS HERE !!!!!!!!
+		 }
+
+		 //Fast Blinking (four times a second) Yellow for 5 sec warnning begining of data collection via MQTT
+		   for (int i = 0; i < 20; i++) {
+			   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!!
+			   HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
+		   }
+
 	  for(int measurement = 0; measurement < 10; measurement++){
 
 		  //------------------------------Read SPI Data------------------------------//
@@ -201,7 +277,16 @@ int main(void)
 	  readingNumber = 0;
 	  deviceID_Number++;
 
+	  //shows a red,yellow,green "get ready" sequence
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Red LED on
+	  HAL_Delay(3000);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Green LED on
+	  HAL_Delay(3000);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!! Red LED off
+      //FOR USER: BREATHE INTO THE SENSOR
 
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // mosfet pin low (stops current flow to heater pins)
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // Green LED off
 
 	  HAL_Delay(1500);
   }
