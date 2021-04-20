@@ -50,6 +50,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 SeniorDesignMaster.list \
 
+OBJCOPY_HEX += \
+SeniorDesignMaster.hex \
+
 OBJCOPY_BIN += \
 SeniorDesignMaster.bin \
 
@@ -76,6 +79,11 @@ SeniorDesignMaster.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DE
 	@echo 'Finished building: $@'
 	@echo ' '
 
+SeniorDesignMaster.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "SeniorDesignMaster.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 SeniorDesignMaster.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "SeniorDesignMaster.bin"
 	@echo 'Finished building: $@'
@@ -86,7 +94,7 @@ clean:
 	-$(RM) *
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

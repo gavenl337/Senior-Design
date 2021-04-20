@@ -1527,8 +1527,8 @@ int main(void)
  800115e:	f44f 7180 	mov.w	r1, #256	; 0x100
  8001162:	4882      	ldr	r0, [pc, #520]	; (800136c <main+0x380>)
  8001164:	f002 ff7a 	bl	800405c <HAL_GPIO_WritePin>
-		  HAL_Delay(100);
- 8001168:	2064      	movs	r0, #100	; 0x64
+		  HAL_Delay(200);
+ 8001168:	20c8      	movs	r0, #200	; 0xc8
  800116a:	f001 f8b9 	bl	80022e0 <HAL_Delay>
 
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);				//set CS2 pin LOW.

@@ -155,7 +155,7 @@ int main(void)
 		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_1, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
 		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);				//set CS1 pin HIGH.
-		  HAL_Delay(100);
+		  HAL_Delay(200);
 
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);				//set CS2 pin LOW.
 		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_2, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
