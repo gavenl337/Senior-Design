@@ -87,7 +87,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 	for (int i = 0; i<6; i++)
 		{
-			adc[i] = buffer[i];
+			adc[i] = adc_buf[i];
 		}
 }
 
@@ -184,7 +184,8 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  while (1){
+  while (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0)){
+
 	  	//Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
 		for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
@@ -291,7 +292,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
   /* USER CODE END 3 */
-
+//}
 
 /**
   * @brief System Clock Configuration
@@ -603,17 +604,23 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Heater_GPIO_Port, Heater_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LED_red_Pin|LED_green_Pin|Heater_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, CS3_Pin|CS2_Pin|CS1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : Heater_Pin */
-  GPIO_InitStruct.Pin = Heater_Pin;
+  /*Configure GPIO pin : Button_Pin */
+  GPIO_InitStruct.Pin = Button_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Button_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LED_red_Pin LED_green_Pin Heater_Pin */
+  GPIO_InitStruct.Pin = LED_red_Pin|LED_green_Pin|Heater_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Heater_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CS3_Pin CS2_Pin CS1_Pin */
   GPIO_InitStruct.Pin = CS3_Pin|CS2_Pin|CS1_Pin;
