@@ -2,3 +2,5 @@
 *.o
 SeniorDesignSTM32Master/Debug/makefile
 SeniorDesignSTM32Master/Debug/SeniorDesignMaster.map
+*.xml
+*.map
