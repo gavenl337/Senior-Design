@@ -64,8 +64,13 @@ all: main-build
 main-build: SeniorDesignMaster.elf secondary-outputs
 
 # Tool invocations
-SeniorDesignMaster.elf: $(OBJS) $(USER_OBJS) C:\Users\gaven\Desktop\Repositories\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "SeniorDesignMaster.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\gaven\Desktop\Repositories\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SeniorDesignMaster.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+<<<<<<< Updated upstream
+SeniorDesignMaster.elf: $(OBJS) $(USER_OBJS) C:\Users\shnee\Documents\GitHub\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "SeniorDesignMaster.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\shnee\Documents\GitHub\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SeniorDesignMaster.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+=======
+SeniorDesignMaster.elf: $(OBJS) $(USER_OBJS) C:\Users\rania\Documents\GitHub\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld
+	arm-none-eabi-gcc -o "SeniorDesignMaster.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\rania\Documents\GitHub\Senior-Design\SeniorDesignSTM32Master\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SeniorDesignMaster.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+>>>>>>> Stashed changes
 	@echo 'Finished building target: $@'
 	@echo ' '
 
