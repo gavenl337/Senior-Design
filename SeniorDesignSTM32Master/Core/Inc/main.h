@@ -72,10 +72,12 @@ void Error_Handler(void);
 #define Pot_IN_3_GPIO_Port GPIOA
 #define SIM_TX_Pin GPIO_PIN_2
 #define SIM_TX_GPIO_Port GPIOA
-#define R_LED_Pin GPIO_PIN_1
-#define R_LED_GPIO_Port GPIOB
-#define G_LED_Pin GPIO_PIN_2
-#define G_LED_GPIO_Port GPIOB
+#define Button_Pin GPIO_PIN_0
+#define Button_GPIO_Port GPIOB
+#define LED_red_Pin GPIO_PIN_1
+#define LED_red_GPIO_Port GPIOB
+#define LED_green_Pin GPIO_PIN_2
+#define LED_green_GPIO_Port GPIOB
 #define Heater_Pin GPIO_PIN_10
 #define Heater_GPIO_Port GPIOB
 #define CS3_Pin GPIO_PIN_6
