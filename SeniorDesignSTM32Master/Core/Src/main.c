@@ -81,15 +81,15 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t adc_buf[ADC_BUF_LEN], adc[6];
+int adc_buf[ADC_BUF_LEN], adc[6];
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
-{
-	for (int i = 0; i<6; i++)
-		{
-			adc[i] = buffer[i];
-		}
-}
+//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+//{
+//	for (int i = 0; i<6; i++)
+//		{
+//			adc[i] = buffer[i];
+//		}
+//}
 
 /* USER CODE END 0 */
 
@@ -118,25 +118,25 @@ int main(void)
 	int SPI_Transmit_Data_1;
 	int SPI_Transmit_Data_2;
 	int SPI_Transmit_Data_3;
-	char deviceID[20] = "Unit One";
+	//char deviceID[20] = "Unit One";
 	char readingType[20] = "Ambient";
-	int readingNumber = 0;
+	int readingNumber = 1;
 	int deviceID_Number = 1;
 
   //define sensor warming time
-  #define SENS_WARMING_TIME 300 //approx. 5 minutes
+  #define SENS_WARMING_TIME 10 //approx. 5 minutes
 
-  unsigned long lastMillis = 0; // I ADDED THINGS HERE !!!!!!!!
-  int long sensor1ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
-  int long sensor2ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
-  int long sensor3ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
-  int long sensor1ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
-  int long sensor2ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
-  int long sensor3ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+  //unsigned long lastMillis = 0; // I ADDED THINGS HERE !!!!!!!!
+  //int long sensor1ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  //int long sensor2ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  //int long sensor3ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
+  //int long sensor1ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+  //int long sensor2ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
+  //int long sensor3ValuesB[21]; // I ADDED THINGS HERE !!!!!!!!
 
-  char *valuePayload; // I ADDED THINGS HERE !!!!!!!!
-  char str[80]; // how long does MQTT need to be?
-  time_t t;
+  //char *valuePayload; // I ADDED THINGS HERE !!!!!!!!
+  //char str[80]; // how long does MQTT need to be?
+  //time_t t;
 
   /* USER CODE END Init */
 
@@ -185,7 +185,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   while (1){
-	  	//Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
+	  uart_buf_len =sprintf(uart_buf, "Made it to the main loop");	  	//load print buffer with message
+	  		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+	  	//Fast blinking - Blinking red light 4 times per second for 3 seconds indicating beginning of sensor warmup
 		for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
 		  HAL_Delay(125); // I ADDED THINGS HERE !!!!!!!!
@@ -238,14 +240,14 @@ int main(void)
 		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);				//set CS2 pin HIGH.
 
-		  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);				//set CS3 pin LOW.
-		  //HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_3, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
-		  //while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-		  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);				//set CS3 pin HIGH.
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);				//set CS3 pin LOW.
+		  HAL_SPI_Transmit(&hspi1, (uint8_t *)&SPI_Transmit_Data_3, 1, 10); //handle SPI, Cast data to a 16 bit unsigned integer, 1 bytes of data, 10 ms delay
+		  while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);				//set CS3 pin HIGH.
 
 		  //------------------------------Send USART Data to Particle Boron Board------------------------------//
 
-		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  		//load print buffer with message
+		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], adc[2], readingType, readingNumber);	  		//load print buffer with message
 		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
 		  readingNumber++;
 
@@ -253,29 +255,12 @@ int main(void)
 
 		  uart_buf_len =sprintf(uart_buf, "Test #%d\n", measurement);	  		//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
-		  for(int i = 0; i < 2; i++){											//iterate through SPI array and print results to terminal
+		  for(int i = 0; i < 3; i++){											//iterate through SPI array and print results to terminal
 			  displayResults(i+1, spiData[i], adc[i]);
 		  }
 		  HAL_Delay(1500);
 
 	  }
-
-	  char readingType[20] = "Breath";
-	  for(int measurement = 0; measurement < 10; measurement++){
-		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  		//load print buffer with message
-		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
-
-		  uart_buf_len =sprintf(uart_buf, "Potentiometer 1 Value (0 - 128): %d \
-				  	  	  	  	  	  	   \n\rPotentiometer 2 Value (0 - 128): %d", SPI_Transmit_Data_1, SPI_Transmit_Data_2);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-
-		  uart_buf_len =sprintf(uart_buf, "\n\rSent To Boron --> \"Unit %d, %d, %d, %s, %d\"\r\n\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
-		  readingNumber++;
-	  	  HAL_Delay(1500);
-	  }
-	  readingNumber = 0;
-	  deviceID_Number++;
 
 	  //shows a red,yellow,green "get ready" sequence
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!! Red LED on
@@ -284,6 +269,24 @@ int main(void)
 	  HAL_Delay(3000);
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // I ADDED THINGS HERE !!!!!!!! Red LED off
       //FOR USER: BREATHE INTO THE SENSOR
+
+	  char readingType[20] = "Breath";
+	  for(int measurement = 0; measurement < 10; measurement++){
+		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], adc[2], readingType, readingNumber);	  		//load print buffer with message
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "Potentiometer 1 Value (0 - 128): %d \
+				  	  	  	  	  	  	   \n\rPotentiometer 2 Value (0 - 128): %d \
+				                           \n\rPotentiometer 3 Value (0 - 128): %d", SPI_Transmit_Data_1, SPI_Transmit_Data_2);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+
+		  uart_buf_len =sprintf(uart_buf, "\n\rSent To Boron --> \"Unit %d, %d, %d, %s, %d\"\r\n\n", deviceID_Number, adc[0], adc[1], readingType, readingNumber);	  	//load print buffer with message
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  readingNumber++;
+	  	  HAL_Delay(1500);
+	  }
+	  readingNumber = 0;
+	  deviceID_Number = 1;
 
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // mosfet pin low (stops current flow to heater pins)
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // Green LED off
@@ -296,7 +299,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
   /* USER CODE END 3 */
-
 
 /**
   * @brief System Clock Configuration
@@ -608,17 +610,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Heater_GPIO_Port, Heater_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, R_LED_Pin|G_LED_Pin|Heater_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, CS3_Pin|CS2_Pin|CS1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : Heater_Pin */
-  GPIO_InitStruct.Pin = Heater_Pin;
+  /*Configure GPIO pins : R_LED_Pin G_LED_Pin Heater_Pin */
+  GPIO_InitStruct.Pin = R_LED_Pin|G_LED_Pin|Heater_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Heater_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CS3_Pin CS2_Pin CS1_Pin */
   GPIO_InitStruct.Pin = CS3_Pin|CS2_Pin|CS1_Pin;
