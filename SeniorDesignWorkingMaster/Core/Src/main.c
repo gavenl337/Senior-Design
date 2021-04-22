@@ -125,6 +125,7 @@ int main(void)
 
 	int output = 0;
 	int power = 1;
+
 	int dip[4];
 
 	int warmtime = 0;
@@ -178,26 +179,9 @@ int main(void)
 		  //stuck here until button press
 	  }
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // mosfet pin low (stops current flow to heater pins)
-		/*if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12) == GPIO_PIN_SET){
-			dip[0] = 1;
-		} else {
-			dip[0] = 0;
-		}
-		if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11) == GPIO_PIN_SET){
-			dip[1] = 1;
-		} else {
-			dip[1] = 0;
-		};
-		if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10) == GPIO_PIN_SET){
-			dip[2] = 1;
-		} else {
-			dip[2] = 0;
-		};
-		if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET){
-			dip[3] = 1;
-		} else {
-			dip[3] = 0;
-		};*/
+
+	  output = 0;
+	  power = 1;
 
 	  dip[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12);
 	  dip[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
@@ -209,13 +193,13 @@ int main(void)
 			power *= 2;
 		}
 
-		warmtime = output * 100;
+	  warmtime = output*100;
 
 	  //define sensor warming time
 	  #define SENS_WARMING_TIME warmtime //anywhere from 0 to 16 minutes in 30 second intervals
 
 	  uart_buf_len =sprintf(uart_buf, "Warm time set to: %d\n\r", warmtime);	  		//load print buffer with message
-	  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+	  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
 
 
 	  	//Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
@@ -283,13 +267,13 @@ int main(void)
 		  //------------------------------Send USART Data to Particle Boron Board------------------------------//
 
 		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], adc[2], readingType, readingNumber);	  		//load print buffer with message
-		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
 		  readingNumber++;
 
 		  //------------------------------Display Results to Terminal------------------------------//
 
-		  uart_buf_len =sprintf(uart_buf, "Test #%d\n", measurement);	  		//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  uart_buf_len =sprintf(uart_buf, "Test #%d\r\n", measurement);	  		//load print buffer with message
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
 		  //for(int i = 0; i < 3; i++){											//iterate through SPI array and print results to terminal
 			//  displayResults(i+1, spiData[i], adc[i]);
 		  //}
@@ -306,19 +290,22 @@ int main(void)
       //FOR USER: BREATHE INTO THE SENSOR
 
 	  char readingType[20] = "Breath";
+	  while(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0)){
+	  		  //stuck here until button press
+	  	  }
 	  for(int measurement = 0; measurement < 10; measurement++){
 		  uart_buf_len =sprintf(uart_buf, "Unit %d, %d, %d, %d, %s, %d\n", deviceID_Number, adc[0], adc[1], adc[2], readingType, readingNumber);	  		//load print buffer with message
-		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
 
 		  uart_buf_len =sprintf(uart_buf, "Potentiometer 1 Value (0 - 128): %d \n\r", SPI_Transmit_Data_1);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 		  uart_buf_len =sprintf(uart_buf, "Potentiometer 2 Value (0 - 128): %d \n\r", SPI_Transmit_Data_2);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 		  uart_buf_len =sprintf(uart_buf, "Potentiometer 3 Value (0 - 128): %d \n\r", SPI_Transmit_Data_3);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 
 		  uart_buf_len =sprintf(uart_buf, "\n\rSent To Boron --> \"Unit %d, %d, %d, %d, %s, %d\"\r\n\n", deviceID_Number, adc[0], adc[1], adc[2], readingType, readingNumber);	  	//load print buffer with message
-		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
+		  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buf, uart_buf_len, 100);		//print to terminal
 		  readingNumber++;
 	  	  HAL_Delay(500);
 	  }
