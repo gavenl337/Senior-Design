@@ -96,24 +96,15 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC_CLK_ENABLE();
 
     __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
     /**ADC1 GPIO Configuration
     PC0     ------> ADC1_IN1
     PC1     ------> ADC1_IN2
     PC2     ------> ADC1_IN3
-    PC3     ------> ADC1_IN4
-    PA0     ------> ADC1_IN5
-    PA1     ------> ADC1_IN6
     */
-    GPIO_InitStruct.Pin = Sensor_1_Pin|Sensor_2_Pin|Sensor_3_Pin|Pot_IN_1_Pin;
+    GPIO_InitStruct.Pin = Sensor_1_Pin|Sensor_2_Pin|Sensor_3_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG_ADC_CONTROL;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = Pot_IN_2_Pin|Pot_IN_3_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG_ADC_CONTROL;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
@@ -160,13 +151,8 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     PC0     ------> ADC1_IN1
     PC1     ------> ADC1_IN2
     PC2     ------> ADC1_IN3
-    PC3     ------> ADC1_IN4
-    PA0     ------> ADC1_IN5
-    PA1     ------> ADC1_IN6
     */
-    HAL_GPIO_DeInit(GPIOC, Sensor_1_Pin|Sensor_2_Pin|Sensor_3_Pin|Pot_IN_1_Pin);
-
-    HAL_GPIO_DeInit(GPIOA, Pot_IN_2_Pin|Pot_IN_3_Pin);
+    HAL_GPIO_DeInit(GPIOC, Sensor_1_Pin|Sensor_2_Pin|Sensor_3_Pin);
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);

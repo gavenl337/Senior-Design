@@ -123,8 +123,13 @@ int main(void)
 	int readingNumber = 0;
 	int deviceID_Number = 1;
 
-  //define sensor warming time
-  #define SENS_WARMING_TIME 1 //approx. 5 minutes
+	int output = 0;
+	int power = 1;
+	int dip[4];
+
+	int warmtime = 0;
+
+
 
   //unsigned long lastMillis = 0; // I ADDED THINGS HERE !!!!!!!!
   //int long sensor1ValuesA[21]; // I ADDED THINGS HERE !!!!!!!!
@@ -159,6 +164,8 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);	//set CS1 pin HIGH.
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);	//set CS2 pin HIGH.
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);	//set CS3 pin HIGH.
+
+
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   /* USER CODE END 2 */
 
@@ -166,6 +173,47 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   while (1){
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // mosfet pin low (stops current flow to heater pins)
+		/*if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12) == GPIO_PIN_SET){
+			dip[0] = 1;
+		} else {
+			dip[0] = 0;
+		}
+		if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11) == GPIO_PIN_SET){
+			dip[1] = 1;
+		} else {
+			dip[1] = 0;
+		};
+		if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10) == GPIO_PIN_SET){
+			dip[2] = 1;
+		} else {
+			dip[2] = 0;
+		};
+		if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET){
+			dip[3] = 1;
+		} else {
+			dip[3] = 0;
+		};*/
+
+	  dip[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12);
+	  dip[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
+	  dip[2] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10);
+	  dip[3] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9);
+
+		for (int i=0; i<=3; i++){
+			output += dip[3-i]*power;
+			power *= 2;
+		}
+
+		warmtime = output * 100;
+
+	  //define sensor warming time
+	  #define SENS_WARMING_TIME warmtime //anywhere from 0 to 16 minutes in 30 second intervals
+
+	  uart_buf_len =sprintf(uart_buf, "Warm time set to: %d\n\r", warmtime);	  		//load print buffer with message
+	  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
+
+
 	  	//Fast blinking - Blinking red light 4 times per second for 3 seconds indicating begining of sensor warmup
 		for (int i = 0; i < 12; i++) { // I ADDED THINGS HERE !!!!!!!!
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
@@ -176,6 +224,10 @@ int main(void)
 
 		//code to power up sensors here
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // I ADDED THINGS HERE !!!!!!!!
+
+		//if (SENS_WARMING_TIME == 0) {
+		//	SENS_WARMING_TIME = 60;
+		//}
 
 		//Fast blinking - Blinking red light 1 times per second for 5 minute/s indicating sensor warming up
 		 for (int i = 0; i < SENS_WARMING_TIME; i++) {
@@ -281,6 +333,7 @@ int main(void)
 
   /* USER CODE END 3 */
 }
+
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -374,7 +427,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.NbrOfConversion = 6;
+  hadc1.Init.NbrOfConversion = 3;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
@@ -416,30 +469,6 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = ADC_REGULAR_RANK_3;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_4;
-  sConfig.Rank = ADC_REGULAR_RANK_4;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_5;
-  sConfig.Rank = ADC_REGULAR_RANK_5;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_6;
-  sConfig.Rank = ADC_REGULAR_RANK_6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -616,10 +645,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Dip5_Pin Dip4_Pin Dip3_Pin Dip2_Pin
-                           Dip1_Pin */
-  GPIO_InitStruct.Pin = Dip5_Pin|Dip4_Pin|Dip3_Pin|Dip2_Pin
-                          |Dip1_Pin;
+  /*Configure GPIO pins : Dip4_Pin Dip3_Pin Dip2_Pin Dip1_Pin */
+  GPIO_InitStruct.Pin = Dip4_Pin|Dip3_Pin|Dip2_Pin|Dip1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
