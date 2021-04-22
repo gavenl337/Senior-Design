@@ -173,6 +173,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   while (1){
+
+	  while(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0)){
+		  //stuck here until button press
+	  }
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // mosfet pin low (stops current flow to heater pins)
 		/*if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12) == GPIO_PIN_SET){
 			dip[0] = 1;
@@ -286,9 +290,9 @@ int main(void)
 
 		  uart_buf_len =sprintf(uart_buf, "Test #%d\n", measurement);	  		//load print buffer with message
 		  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);	//print to terminal
-		  for(int i = 0; i < 3; i++){											//iterate through SPI array and print results to terminal
-			  displayResults(i+1, spiData[i], adc[i]);
-		  }
+		  //for(int i = 0; i < 3; i++){											//iterate through SPI array and print results to terminal
+			//  displayResults(i+1, spiData[i], adc[i]);
+		  //}
 		  HAL_Delay(500);
 
 	  }
