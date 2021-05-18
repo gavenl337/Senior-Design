@@ -302,4 +302,3 @@ PC1.Signal=ADCx_IN2
 ProjectManager.LibraryCopy=1
 PB1.GPIOParameters=GPIO_Label
 PA7.Signal=SPI1_MOSI
-isbadioc=false
